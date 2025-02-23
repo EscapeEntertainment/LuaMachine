@@ -525,7 +525,7 @@ protected:
 
 	FLuaValue UserDataMetaTable;
 
-	FLuaValue DefaultUserDataMetaTable;
+	FLuaValue DefaultUserDataMetaMethodEq;
 
 	virtual void LuaStateInit();
 

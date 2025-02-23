@@ -305,15 +305,12 @@ ULuaState* ULuaState::GetLuaState(UWorld* InWorld)
 		Pop();
 	}
 
-	// default metatable for userdata
+	// default metamethod __eq for userdata
 	// allow comparison between userdata/UObject/UFunction
-	// it is required for lua < 5.3 (included ulua) that the metatable is the same for 
-	// all the userdata
+	// it is required for lua < 5.3 (included ulua) that the metamethod is the same
 	{
-		lua_newtable(L);
 		lua_pushcfunction(L, ULuaState::MetaTableFunctionUserData__eq);
-		lua_setfield(L, -2, "__eq");
-		DefaultUserDataMetaTable = ToLuaValue(-1);
+		DefaultUserDataMetaMethodEq = ToLuaValue(-1);
 		Pop();
 	}
 
@@ -597,7 +594,10 @@ void ULuaState::FromLuaValue(FLuaValue& LuaValue, UObject* CallContext, lua_Stat
 			}
 			else
 			{
-				FromLuaValue(DefaultUserDataMetaTable, nullptr, State);
+				lua_newtable(State);
+				// allow comparison between userdata/UObject/UFunction
+				FromLuaValue(DefaultUserDataMetaMethodEq, nullptr, State);
+				lua_setfield(State, -2, "__eq");
 			}
 			lua_setmetatable(State, -2);
 		}
@@ -806,7 +806,6 @@ int ULuaState::MetaTableFunctionUserData__index(lua_State* L)
 		{
 			LuaState->FromLuaValue(*LuaValue, Context, L);
 			return 1;
-
 		}
 	}
 
@@ -2621,7 +2620,7 @@ void ULuaState::SetupAndAssignUserDataMetatable(UObject * Context, TMap<FString,
 	lua_setfield(State, -2, "__index");
 	lua_pushcfunction(State, ULuaState::MetaTableFunctionUserData__newindex);
 	lua_setfield(State, -2, "__newindex");
-	lua_pushcfunction(State, ULuaState::MetaTableFunctionUserData__eq);
+	FromLuaValue(DefaultUserDataMetaMethodEq, nullptr, State);
 	lua_setfield(State, -2, "__eq");
 	if (Context->IsA<ULuaUserDataObject>())
 	{
