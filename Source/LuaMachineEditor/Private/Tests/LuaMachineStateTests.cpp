@@ -96,12 +96,55 @@ bool FLuaMachineStateTest_MaxMemoryUsage::RunTest(const FString& Parameters)
 
 	UnitTestState->MaxMemoryUsage = 1;
 
-	FLuaValue ReturnValue = UnitTestState->RunString("return \"xyz\"", "");
+	UnitTestState->RunString("return \"xyz\"", "");
 
 	TestTrue(TEXT("LuaState Error"), UnitTestState->LastError.Contains("MaxMemoryUsage reached"));
 
 	return true;
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLuaMachineStateTest_Readonly, "LuaMachine.UnitTests.State.Readonly", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FLuaMachineStateTest_Readonly::RunTest(const FString& Parameters)
+{
+	UWorld* TestWorld = UWorld::CreateWorld(EWorldType::Inactive, false);
+
+	ULuaUnitTestState* UnitTestState = ULuaState::CreateDynamicLuaState<ULuaUnitTestState>(TestWorld);
+
+	UnitTestState->bLogError = false;
+
+	UnitTestState->SetLuaValueFromGlobalName("testvalue", UnitTestState->CreateLuaTable());
+
+	UnitTestState->SetLuaTableReadonly(UnitTestState->GetLuaValueFromGlobalName("testvalue"), true);
+
+	UnitTestState->RunString("testvalue.x = 22", "");
+
+	TestTrue(TEXT("LuaState Error"), UnitTestState->LastError.Contains("attempt to modify a readonly table"));
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLuaMachineStateTest_Sandbox, "LuaMachine.UnitTests.State.Sandbox", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FLuaMachineStateTest_Sandbox::RunTest(const FString& Parameters)
+{
+	UWorld* TestWorld = UWorld::CreateWorld(EWorldType::Inactive, false);
+
+	ULuaUnitTestState* UnitTestState = ULuaState::CreateDynamicLuaState<ULuaUnitTestState>(TestWorld);
+
+	UnitTestState->bLogError = false;
+
+	UnitTestState->SetLuaValueFromGlobalName("testvalue", UnitTestState->CreateLuaTable());
+
+	UnitTestState->Sandbox();
+
+	UnitTestState->RunString("testvalue.x = 22", "");
+
+	TestTrue(TEXT("LuaState Error"), UnitTestState->LastError.Contains("attempt to modify a readonly table"));
+
+	return true;
+}
+
 #endif
 
 #endif

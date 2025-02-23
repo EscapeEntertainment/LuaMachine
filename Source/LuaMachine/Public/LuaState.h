@@ -536,6 +536,12 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Lua")
 	int64 GetMemoryUsage() const { return CurrentMemoryUsage; }
 
+	UFUNCTION(BlueprintCallable, Category = "Lua")
+	void SetLuaTableReadonly(FLuaValue LuaValue, const bool bEnabled);
+
+	UFUNCTION(BlueprintCallable, Category = "Lua")
+	void Sandbox();
+
 protected:
 	lua_State* L;
 	bool bDisabled;

@@ -2984,6 +2984,21 @@ void ULuaState::SetLuaValueFromGlobalName(const FString & Name, FLuaValue LuaVal
 	AddLuaValueToLuaState(Name, LuaValue);
 }
 
+void ULuaState::SetLuaTableReadonly(FLuaValue LuaValue, const bool bEnabled)
+{
+	if (LuaValue.Type != ELuaValueType::Table)
+	{
+		return;
+	}
+	FromLuaValue(LuaValue);
+	lua_setreadonly(L, -1, bEnabled ? 1 : 0);
+}
+
+void ULuaState::Sandbox()
+{
+	luaL_sandbox(L);
+}
+
 FLuaValue ULuaState::RunString(const FString & CodeString, FString CodePath)
 {
 	FLuaValue ReturnValue;
