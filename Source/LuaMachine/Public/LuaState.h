@@ -510,6 +510,9 @@ public:
 	FLuaValue GetLuaValueFromGlobalName(const FString& GlobalName);
 
 	UFUNCTION(BlueprintCallable, Category = "Lua")
+	void SetLuaValueFromGlobalName(const FString& Name, FLuaValue LuaValue);
+
+	UFUNCTION(BlueprintCallable, Category = "Lua")
 	FLuaValue LuaValueCall(FLuaValue LuaValue, TArray<FLuaValue> Args);
 
 	UFUNCTION(BlueprintCallable, Category = "Lua")

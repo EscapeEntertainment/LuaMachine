@@ -17,6 +17,6 @@ class ULuaUnitTestState : public ULuaState
 	ULuaUnitTestState()
 	{
 		MaxMemoryUsage = 8192;
-		bLogError = false;
+		bLogError = true;
 	}
 };

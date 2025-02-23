@@ -21,4 +21,10 @@ public:
 
 	TMap<FString, TFunction<FLuaValue()>> LuaUserDataEntries;
 
+	UFUNCTION()
+	FLuaValue DummyString() const
+	{
+		return "Dummy";
+	}
+
 };

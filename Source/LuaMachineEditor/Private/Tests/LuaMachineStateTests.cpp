@@ -92,6 +92,8 @@ bool FLuaMachineStateTest_MaxMemoryUsage::RunTest(const FString& Parameters)
 
 	ULuaUnitTestState* UnitTestState = ULuaState::CreateDynamicLuaState<ULuaUnitTestState>(TestWorld);
 
+	UnitTestState->bLogError = false;
+
 	UnitTestState->MaxMemoryUsage = 1;
 
 	FLuaValue ReturnValue = UnitTestState->RunString("return \"xyz\"", "");

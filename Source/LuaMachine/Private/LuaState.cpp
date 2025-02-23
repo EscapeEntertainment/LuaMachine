@@ -2979,6 +2979,11 @@ void ULuaState::AddLuaValueToLuaState(const FString & Name, FLuaValue LuaValue)
 	SetFieldFromTree(Name, LuaValue, true);
 }
 
+void ULuaState::SetLuaValueFromGlobalName(const FString & Name, FLuaValue LuaValue)
+{
+	AddLuaValueToLuaState(Name, LuaValue);
+}
+
 FLuaValue ULuaState::RunString(const FString & CodeString, FString CodePath)
 {
 	FLuaValue ReturnValue;

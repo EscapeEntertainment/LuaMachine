@@ -44,5 +44,31 @@ bool FLuaMachineUserDataInterfaceTest_NewIndex::RunTest(const FString& Parameter
 	return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLuaMachineUserDataInterfaceTest_UFunction, "LuaMachine.UnitTests.UserDataInterface.UFunction", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FLuaMachineUserDataInterfaceTest_UFunction::RunTest(const FString& Parameters)
+{
+	UWorld* TestWorld = UWorld::CreateWorld(EWorldType::Inactive, false);
+
+	ULuaUnitTestState* UnitTestState = ULuaState::CreateDynamicLuaState<ULuaUnitTestState>(TestWorld);
+
+	UnitTestState->bLogError = true;
+
+	ULuaUserDataTest* TestObject = NewObject<ULuaUserDataTest>();
+
+	TestObject->LuaUserDataEntries.Add("dummy", []()
+		{
+			return FLuaValue::Function(GET_FUNCTION_NAME_CHECKED(ULuaUserDataTest, DummyString));
+		});
+
+	UnitTestState->SetLuaValueFromGlobalName("testobject", TestObject);
+
+	FLuaValue ReturnValue = UnitTestState->RunString("return testobject.dummy()", "");
+
+	TestTrue(TEXT("LuaValue.String == \"Dummy\""), ReturnValue.String == "Dummy");
+
+	return true;
+}
+
 
 #endif
