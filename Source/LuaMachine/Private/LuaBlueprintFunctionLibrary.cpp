@@ -253,12 +253,11 @@ FLuaValue ULuaBlueprintFunctionLibrary::LuaGetGlobal(UObject* WorldContextObject
 {
 	ULuaState* L = FLuaMachineModule::Get().GetLuaState(State, WorldContextObject->GetWorld());
 	if (!L)
+	{
 		return FLuaValue();
+	}
 
-	uint32 ItemsToPop = L->GetFieldFromTree(Name);
-	FLuaValue ReturnValue = L->ToLuaValue(-1);
-	L->Pop(ItemsToPop);
-	return ReturnValue;
+	return L->GetLuaValueFromGlobalName(Name);
 }
 
 int64 ULuaBlueprintFunctionLibrary::LuaValueToPointer(UObject* WorldContextObject, TSubclassOf<ULuaState> State, FLuaValue Value)
@@ -1161,26 +1160,13 @@ TArray<FLuaValue> ULuaBlueprintFunctionLibrary::LuaGlobalCallValueMulti(UObject*
 
 FLuaValue ULuaBlueprintFunctionLibrary::LuaValueCall(FLuaValue Value, TArray<FLuaValue> Args)
 {
-	FLuaValue ReturnValue;
-
 	ULuaState* L = Value.LuaState.Get();
 	if (!L)
-		return ReturnValue;
-
-	L->FromLuaValue(Value);
-
-	int NArgs = 0;
-	for (FLuaValue& Arg : Args)
 	{
-		L->FromLuaValue(Arg);
-		NArgs++;
+		return FLuaValue();
 	}
 
-	L->PCall(NArgs, ReturnValue);
-
-	L->Pop();
-
-	return ReturnValue;
+	return L->LuaValueCall(Value, Args);
 }
 
 FLuaValue ULuaBlueprintFunctionLibrary::LuaValueCallIfNotNil(FLuaValue Value, TArray<FLuaValue> Args)

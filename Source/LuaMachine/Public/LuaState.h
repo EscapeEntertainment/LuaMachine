@@ -496,8 +496,26 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Lua")
 	FLuaValue RunString(const FString& CodeString, FString CodePath);
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Lua")
+	FLuaValue GetLuaValueFromGlobalName(const FString& GlobalName);
+
+	UFUNCTION(BlueprintCallable, Category = "Lua")
+	FLuaValue LuaValueCall(FLuaValue LuaValue, TArray<FLuaValue> Args);
+
 	UFUNCTION(BlueprintCallable, Category = "Lua")
 	void Error(const FString& ErrorString);
+
+	template<typename T>
+	static T* CreateDynamicLuaState(UWorld* InWorld)
+	{
+		T* NewLuaState = NewObject<T>((UObject*)GetTransientPackage());
+		if (!NewLuaState)
+		{
+			return nullptr;
+		}
+
+		return Cast<T>(NewLuaState->GetLuaState(InWorld));
+	}
 
 protected:
 	lua_State* L;
@@ -506,6 +524,8 @@ protected:
 	UWorld* CurrentWorld;
 
 	FLuaValue UserDataMetaTable;
+
+	FLuaValue DefaultUserDataMetaTable;
 
 	virtual void LuaStateInit();
 

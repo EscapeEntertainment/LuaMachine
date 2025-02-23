@@ -294,12 +294,26 @@ ULuaState* ULuaState::GetLuaState(UWorld* InWorld)
 		if (!RunCodeAsset(UserDataMetaTableFromCodeAsset, 1))
 		{
 			if (bLogError)
+			{
 				LogError(LastError);
+			}
 			ReceiveLuaError(LastError);
 			bDisabled = true;
 			return nullptr;
 		}
 		UserDataMetaTable = ToLuaValue(-1);
+		Pop();
+	}
+
+	// default metatable for userdata
+	// allow comparison between userdata/UObject/UFunction
+	// it is required for lua < 5.3 (included ulua) that the metatable is the same for 
+	// all the userdata
+	{
+		lua_newtable(L);
+		lua_pushcfunction(L, ULuaState::MetaTableFunctionUserData__eq);
+		lua_setfield(L, -2, "__eq");
+		DefaultUserDataMetaTable = ToLuaValue(-1);
 		Pop();
 	}
 
@@ -583,10 +597,7 @@ void ULuaState::FromLuaValue(FLuaValue& LuaValue, UObject* CallContext, lua_Stat
 			}
 			else
 			{
-				lua_newtable(State);
-				// allow comparison between userdata/UObject/UFunction
-				lua_pushcfunction(State, ULuaState::MetaTableFunctionUserData__eq);
-				lua_setfield(State, -2, "__eq");
+				FromLuaValue(DefaultUserDataMetaTable, nullptr, State);
 			}
 			lua_setmetatable(State, -2);
 		}
@@ -2838,6 +2849,34 @@ FLuaValue ULuaState::RunString(const FString & CodeString, FString CodePath)
 void ULuaState::Error(const FString & ErrorString)
 {
 	luaL_error(L, TCHAR_TO_UTF8(*ErrorString));
+}
+
+FLuaValue ULuaState::GetLuaValueFromGlobalName(const FString & GlobalName)
+{
+	const uint32 ItemsToPop = GetFieldFromTree(GlobalName);
+	FLuaValue ReturnValue = ToLuaValue(-1);
+	Pop(ItemsToPop);
+	return ReturnValue;
+}
+
+FLuaValue ULuaState::LuaValueCall(FLuaValue LuaValue, TArray<FLuaValue> Args)
+{
+	FLuaValue ReturnValue;
+
+	FromLuaValue(LuaValue);
+
+	int NArgs = 0;
+	for (FLuaValue& Arg : Args)
+	{
+		FromLuaValue(Arg);
+		NArgs++;
+	}
+
+	PCall(NArgs, ReturnValue);
+
+	Pop();
+
+	return ReturnValue;
 }
 
 #if LUAMACHINE_LUAU
