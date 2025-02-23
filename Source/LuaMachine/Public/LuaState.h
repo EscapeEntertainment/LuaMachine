@@ -99,7 +99,8 @@ struct FLuaLibsLoader
 		, bLoadMath(true)
 		, bLoadUTF8(true)
 		, bLoadDebug(false)
-	{}
+	{
+	}
 
 };
 
@@ -214,7 +215,7 @@ public:
 	virtual void ReceiveLuaCountHook(const FLuaDebug& LuaDebug);
 
 	UFUNCTION(BlueprintCallable, Category = "Lua")
-	FLuaValue NewLuaUserDataObject(TSubclassOf<ULuaUserDataObject> LuaUserDataObjectClass, bool bTrackObject=true);
+	FLuaValue NewLuaUserDataObject(TSubclassOf<ULuaUserDataObject> LuaUserDataObjectClass, bool bTrackObject = true);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Lua")
 	FLuaDebug LuaGetInfo(const int32 Level);
@@ -243,7 +244,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Lua")
 	bool SetPropertyFromLuaValue(UObject* InObject, const FString& PropertyName, FLuaValue Value);
 
-	UFUNCTION(BlueprintCallable, BlueprintPure,  Category = "Lua")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Lua")
 	FLuaValue GetLuaBlueprintPackageTable(const FString& PackageName);
 
 	void FromLuaValue(FLuaValue& LuaValue, UObject* CallContext = nullptr, lua_State* State = nullptr);
@@ -295,7 +296,7 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Lua", meta = (DisplayName = "Lua State Pre Initialization"))
 	void ReceiveLuaStatePreInitialized();
-	
+
 	UFUNCTION(BlueprintNativeEvent, Category = "Lua", meta = (DisplayName = "Lua State Initialized"))
 	void ReceiveLuaStateInitialized();
 
@@ -373,10 +374,15 @@ public:
 
 	FLuaValue CreateLuaLazyTable();
 
-	bool RunFile(const FString& Filename, bool bIgnoreNonExistent, int NRet = 0, bool bNonContentDirectory=false);
+	bool RunFile(const FString& Filename, bool bIgnoreNonExistent, int NRet = 0, bool bNonContentDirectory = false);
 
 	static int MetaTableFunctionUserData__index(lua_State* L);
 	static int MetaTableFunctionUserData__newindex(lua_State* L);
+
+	static int MetaTableFunctionUserDataInterface__index(lua_State* L);
+	static int MetaTableFunctionUserDataInterface__newindex(lua_State* L);
+	static int MetaTableFunctionUserDataInterface__gc(lua_State* L);
+	static int MetaTableFunctionUserDataInterface__tostring(lua_State* L);
 
 	static int TableFunction_print(lua_State* L);
 	static int TableFunction_package_preload(lua_State* L);
@@ -445,6 +451,7 @@ public:
 	void RemoveLuaSmartReference(TSharedRef<FLuaSmartReference> Ref);
 
 	void SetupAndAssignUserDataMetatable(UObject* Context, TMap<FString, FLuaValue>& Metatable, lua_State* State);
+	void SetupAndAssignUserDataInterfaceMetatable(class ILuaUserDataInterface* LuaUserDataInterface, lua_State* State);
 
 	const void* ToPointer(int Index);
 

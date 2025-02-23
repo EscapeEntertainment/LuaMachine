@@ -3,6 +3,7 @@
 #include "LuaState.h"
 #include "LuaComponent.h"
 #include "LuaUserDataObject.h"
+#include "LuaUserDataInterface.h"
 #include "LuaMachine.h"
 #include "LuaBlueprintPackage.h"
 #include "LuaBlueprintFunctionLibrary.h"
@@ -586,6 +587,10 @@ void ULuaState::FromLuaValue(FLuaValue& LuaValue, UObject* CallContext, lua_Stat
 				SetupAndAssignUserDataMetatable(LuaUserDataObject, LuaUserDataObject->Metatable, State);
 			}
 		}
+		else if (ILuaUserDataInterface* LuaUserDataInterface = Cast<ILuaUserDataInterface>(LuaValue.Object))
+		{
+			SetupAndAssignUserDataInterfaceMetatable(LuaUserDataInterface, State);
+		}
 		else
 		{
 			if (UserDataMetaTable.Type == ELuaValueType::Table)
@@ -827,6 +832,60 @@ int ULuaState::MetaTableFunctionUserData__index(lua_State* L)
 	return 1;
 }
 
+int ULuaState::MetaTableFunctionUserDataInterface__index(lua_State* L)
+{
+
+	ULuaState* LuaState = ULuaState::GetFromExtraSpace(L);
+	FLuaUserData* UserData = (FLuaUserData*)lua_touserdata(L, 1);
+
+	if (!UserData->Context.IsValid())
+	{
+		LUAMACHINE_RETURN_ERROR(L, "invalid UObject for UserData %p", UserData);
+	}
+
+	UObject* Context = UserData->Context.Get();
+
+	ILuaUserDataInterface* LuaUserDataInterface = Cast<ILuaUserDataInterface>(Context);
+	if (!LuaUserDataInterface)
+	{
+		LUAMACHINE_RETURN_ERROR(L, "UObject %s does not implement ILuaUserDataInterface", TCHAR_TO_ANSI(*Context->GetPathName()));
+	}
+
+	FString Key = ANSI_TO_TCHAR(lua_tostring(L, 2));
+
+	FLuaValue LuaValue = ILuaUserDataInterface::Execute_LuaMetaMethodIndex(Context, Key);
+
+	LuaState->FromLuaValue(LuaValue, Context, L);
+
+	return 1;
+}
+
+int ULuaState::MetaTableFunctionUserDataInterface__tostring(lua_State* L)
+{
+
+	ULuaState* LuaState = ULuaState::GetFromExtraSpace(L);
+	FLuaUserData* UserData = (FLuaUserData*)lua_touserdata(L, 1);
+
+	if (!UserData->Context.IsValid())
+	{
+		LUAMACHINE_RETURN_ERROR(L, "invalid UObject for UserData %p", UserData);
+	}
+
+	UObject* Context = UserData->Context.Get();
+
+	ILuaUserDataInterface* LuaUserDataInterface = Cast<ILuaUserDataInterface>(Context);
+	if (!LuaUserDataInterface)
+	{
+		LUAMACHINE_RETURN_ERROR(L, "UObject %s does not implement ILuaUserDataInterface", TCHAR_TO_ANSI(*Context->GetPathName()));
+	}
+
+	FLuaValue LuaValue = ILuaUserDataInterface::Execute_LuaMetaMethodToString(Context);
+
+	LuaState->FromLuaValue(LuaValue, Context, L);
+
+	return 1;
+}
+
 int ULuaState::MetaTableFunctionUserData__newindex(lua_State* L)
 {
 	ULuaState* LuaState = ULuaState::GetFromExtraSpace(L);
@@ -871,6 +930,56 @@ int ULuaState::MetaTableFunctionUserData__newindex(lua_State* L)
 			TablePtr->Add(Key, LuaState->ToLuaValue(3, L));
 		}
 	}
+
+	return 0;
+}
+
+int ULuaState::MetaTableFunctionUserDataInterface__newindex(lua_State* L)
+{
+	ULuaState* LuaState = ULuaState::GetFromExtraSpace(L);
+	FLuaUserData* UserData = (FLuaUserData*)lua_touserdata(L, 1);
+	if (!UserData->Context.IsValid())
+	{
+		LUAMACHINE_RETURN_ERROR(L, "invalid UObject for UserData %p", UserData);
+	}
+
+	UObject* Context = UserData->Context.Get();
+
+	ILuaUserDataInterface* LuaUserDataInterface = Cast<ILuaUserDataInterface>(Context);
+	if (!LuaUserDataInterface)
+	{
+		LUAMACHINE_RETURN_ERROR(L, "UObject %s does not implement ILuaUserDataInterface", TCHAR_TO_ANSI(*Context->GetPathName()));
+	}
+
+	FString Key = ANSI_TO_TCHAR(lua_tostring(L, 2));
+	FLuaValue LuaValue = LuaState->ToLuaValue(3, L);
+
+	if (!ILuaUserDataInterface::Execute_LuaMetaMethodNewIndex(Context, Key, LuaValue))
+	{
+		LUAMACHINE_RETURN_ERROR(L, "Unable to set key \"%s\" on UObject %s", TCHAR_TO_ANSI(*Key), TCHAR_TO_ANSI(*Context->GetPathName()));
+	}
+
+	return 0;
+}
+
+int ULuaState::MetaTableFunctionUserDataInterface__gc(lua_State* L)
+{
+	ULuaState* LuaState = ULuaState::GetFromExtraSpace(L);
+	FLuaUserData* UserData = (FLuaUserData*)lua_touserdata(L, 1);
+	if (!UserData->Context.IsValid())
+	{
+		LUAMACHINE_RETURN_ERROR(L, "invalid UObject for UserData %p", UserData);
+	}
+
+	UObject* Context = UserData->Context.Get();
+
+	ILuaUserDataInterface* LuaUserDataInterface = Cast<ILuaUserDataInterface>(Context);
+	if (!LuaUserDataInterface)
+	{
+		LUAMACHINE_RETURN_ERROR(L, "UObject %s does not implement ILuaUserDataInterface", TCHAR_TO_ANSI(*Context->GetPathName()));
+	}
+
+	ILuaUserDataInterface::Execute_LuaMetaMethodGC(Context);
 
 	return 0;
 }
@@ -2660,11 +2769,34 @@ void ULuaState::SetupAndAssignUserDataMetatable(UObject * Context, TMap<FString,
 				}
 			}
 		}
-		else {
+		else
+		{
 			FromLuaValue(Pair.Value, nullptr, State);
 		}
 		lua_setfield(State, -2, TCHAR_TO_ANSI(*Pair.Key));
 	}
+
+	lua_setmetatable(State, -2);
+}
+
+void ULuaState::SetupAndAssignUserDataInterfaceMetatable(ILuaUserDataInterface * LuaUserDataInterface, lua_State * State)
+{
+	if (!State)
+	{
+		State = this->L;
+	}
+
+	lua_newtable(State);
+	lua_pushcfunction(State, ULuaState::MetaTableFunctionUserDataInterface__index);
+	lua_setfield(State, -2, "__index");
+	lua_pushcfunction(State, ULuaState::MetaTableFunctionUserDataInterface__newindex);
+	lua_setfield(State, -2, "__newindex");
+	FromLuaValue(DefaultUserDataMetaMethodEq, nullptr, State);
+	lua_setfield(State, -2, "__eq");
+	lua_pushcfunction(State, ULuaState::MetaTableFunctionUserDataInterface__gc);
+	lua_setfield(State, -2, "__gc");
+	lua_pushcfunction(State, ULuaState::MetaTableFunctionUserDataInterface__tostring);
+	lua_setfield(State, -2, "__tostring");
 
 	lua_setmetatable(State, -2);
 }
