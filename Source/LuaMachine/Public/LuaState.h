@@ -399,6 +399,9 @@ public:
 
 	static int ToByteCode_Writer(lua_State* L, const void* Ptr, size_t Size, void* UserData);
 
+	static void OnAllocateCallback(lua_State* L, size_t OSize, size_t NSize);
+	static void OnInterrupt(lua_State* L, int gc);
+
 #if LUAMACHINE_LUA53
 	static void Debug_Hook(lua_State* L, lua_Debug* ar);
 #endif
@@ -524,6 +527,12 @@ public:
 		return Cast<T>(NewLuaState->GetLuaState(InWorld));
 	}
 
+	UPROPERTY(EditAnywhere, Category = "Lua")
+	int64 MaxMemoryUsage = 0;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Lua")
+	int64 GetMemoryUsage() const { return CurrentMemoryUsage; }
+
 protected:
 	lua_State* L;
 	bool bDisabled;
@@ -542,6 +551,8 @@ protected:
 	TMap<TWeakObjectPtr<UObject>, FLuaDelegateGroup> LuaDelegatesMap;
 
 	FLuaCommandExecutor LuaConsole;
+
+	int64 CurrentMemoryUsage;
 };
 
 #define LUACFUNCTION(FuncClass, FuncName, NumRetValues, NumArgs) static int FuncName ## _C(lua_State* L)\

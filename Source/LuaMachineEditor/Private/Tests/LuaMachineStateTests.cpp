@@ -66,4 +66,40 @@ bool FLuaMachineStateTest_UObject::RunTest(const FString& Parameters)
 	return true;
 }
 
+#if LUAMACHINE_LUAU
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLuaMachineStateTest_CallTyped, "LuaMachine.UnitTests.State.CallTyped", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FLuaMachineStateTest_CallTyped::RunTest(const FString& Parameters)
+{
+	UWorld* TestWorld = UWorld::CreateWorld(EWorldType::Inactive, false);
+
+	ULuaUnitTestState* UnitTestState = ULuaState::CreateDynamicLuaState<ULuaUnitTestState>(TestWorld);
+
+	UnitTestState->RunString("--!strict\ntesttable = { testfunction = function(a: number, b: number) : number return a + b end }", "");
+
+	FLuaValue LuaTestFunction = UnitTestState->GetLuaValueFromGlobalName("testtable.testfunction");
+
+	TestTrue(TEXT("LuaValue.String == \"lua\""), UnitTestState->LuaValueCall(LuaTestFunction, { 1, 2 }).Integer == 3);
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLuaMachineStateTest_MaxMemoryUsage, "LuaMachine.UnitTests.State.MaxMemoryUsage", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FLuaMachineStateTest_MaxMemoryUsage::RunTest(const FString& Parameters)
+{
+	UWorld* TestWorld = UWorld::CreateWorld(EWorldType::Inactive, false);
+
+	ULuaUnitTestState* UnitTestState = ULuaState::CreateDynamicLuaState<ULuaUnitTestState>(TestWorld);
+
+	UnitTestState->MaxMemoryUsage = 1;
+
+	FLuaValue ReturnValue = UnitTestState->RunString("return \"xyz\"", "");
+
+	TestTrue(TEXT("LuaState Error"), UnitTestState->LastError.Contains("MaxMemoryUsage reached"));
+
+	return true;
+}
+#endif
+
 #endif

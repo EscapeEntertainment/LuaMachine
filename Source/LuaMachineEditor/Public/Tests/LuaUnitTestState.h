@@ -13,4 +13,10 @@ UCLASS()
 class ULuaUnitTestState : public ULuaState
 {
 	GENERATED_BODY()
+
+	ULuaUnitTestState()
+	{
+		MaxMemoryUsage = 8192;
+		bLogError = false;
+	}
 };

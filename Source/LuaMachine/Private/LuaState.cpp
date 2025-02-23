@@ -37,6 +37,23 @@ ULuaState::ULuaState()
 	FCoreUObjectDelegates::GetPostGarbageCollect().AddUObject(this, &ULuaState::GCLuaDelegatesCheck);
 }
 
+
+void ULuaState::OnAllocateCallback(lua_State* L, size_t OSize, size_t NSize)
+{
+	ULuaState* LuaState = ULuaState::GetFromExtraSpace(L);
+	LuaState->CurrentMemoryUsage -= OSize;
+	LuaState->CurrentMemoryUsage += NSize;
+}
+
+void ULuaState::OnInterrupt(lua_State* L, int gc)
+{
+	ULuaState* LuaState = ULuaState::GetFromExtraSpace(L);
+	if (LuaState->CurrentMemoryUsage > LuaState->MaxMemoryUsage)
+	{
+		LuaState->Error(FString::Printf(TEXT("MaxMemoryUsage reached: %lld/%lld"), LuaState->CurrentMemoryUsage, LuaState->MaxMemoryUsage));
+	}
+}
+
 ULuaState* ULuaState::GetLuaState(UWorld* InWorld)
 {
 	CurrentWorld = InWorld;
@@ -264,6 +281,13 @@ ULuaState* ULuaState::GetLuaState(UWorld* InWorld)
 	{
 		lua_sethook(L, Debug_Hook, DebugMask, HookInstructionCount);
 	}
+#elif LUAMACHINE_LUAU
+	lua_Callbacks* Callbacks = lua_callbacks(L);
+	if (MaxMemoryUsage > 0)
+	{
+		Callbacks->onallocate = OnAllocateCallback;
+		Callbacks->interrupt = OnInterrupt;
+	}
 #endif
 
 	if (LuaCodeAsset)
@@ -407,6 +431,7 @@ bool ULuaState::RunCode(const TArray<uint8>& Code, const FString& CodePath, int 
 	if (luaL_loadbuffer(L, (const char*)Code.GetData(), Code.Num(), TCHAR_TO_ANSI(*FullCodePath)))
 #elif LUAMACHINE_LUAU
 	size_t ByteCodeSize = 0;
+
 	char* ByteCode = luau_compile(reinterpret_cast<const char*>(Code.GetData()), Code.Num(), nullptr, &ByteCodeSize);
 	if (ByteCode && ByteCode[0] == 0)
 	{
@@ -3037,60 +3062,8 @@ void lua_seti(lua_State * L, int index, lua_Integer i)
 
 void* lua_getextraspace(lua_State * L)
 {
-	int is_main = 0;
-	void* ptr = NULL;
-	luaL_checkstack(L, 4, "not enough stack slots available");
-	lua_pushliteral(L, "__compat53_extraspace");
-	lua_pushvalue(L, -1);
-	lua_rawget(L, LUA_REGISTRYINDEX);
-	if (!lua_istable(L, -1))
-	{
-		lua_pop(L, 1);
-		lua_createtable(L, 0, 2);
-		lua_createtable(L, 0, 1);
-		lua_pushliteral(L, "k");
-		lua_setfield(L, -2, "__mode");
-		lua_setmetatable(L, -2);
-		lua_pushvalue(L, -2);
-		lua_pushvalue(L, -2);
-		lua_rawset(L, LUA_REGISTRYINDEX);
-	}
-	lua_replace(L, -2);
-	is_main = lua_pushthread(L);
-	lua_rawget(L, -2);
-	ptr = lua_touserdata(L, -1);
-	if (!ptr)
-	{
-		lua_pop(L, 1);
-		ptr = lua_newuserdata(L, LUA_EXTRASPACE);
-		if (is_main)
-		{
-			memset(ptr, '\0', LUA_EXTRASPACE);
-			lua_pushthread(L);
-			lua_pushvalue(L, -2);
-			lua_rawset(L, -4);
-			lua_pushboolean(L, 1);
-			lua_pushvalue(L, -2);
-			lua_rawset(L, -4);
-		}
-		else
-		{
-			void* mptr = NULL;
-			lua_pushboolean(L, 1);
-			lua_rawget(L, -3);
-			mptr = lua_touserdata(L, -1);
-			if (mptr)
-				memcpy(ptr, mptr, LUA_EXTRASPACE);
-			else
-				memset(ptr, '\0', LUA_EXTRASPACE);
-			lua_pop(L, 1);
-			lua_pushthread(L);
-			lua_pushvalue(L, -2);
-			lua_rawset(L, -4);
-		}
-	}
-	lua_pop(L, 2);
-	return ptr;
+	lua_Callbacks* Callbacks = lua_callbacks(L);
+	return &Callbacks->userdata;
 }
 
 void lua_len(lua_State * L, int i)
