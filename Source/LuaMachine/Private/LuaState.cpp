@@ -54,6 +54,35 @@ void ULuaState::OnInterrupt(lua_State* L, int gc)
 	}
 }
 
+FLuaValue ULuaState::RequireLuaBlueprintPackage(const FString& Name, TSubclassOf<ULuaBlueprintPackage> LuaBlueprintPackage)
+{
+	ULuaBlueprintPackage* LuaBlueprintPackageInstance = NewObject<ULuaBlueprintPackage>(this, LuaBlueprintPackage);
+	if (LuaBlueprintPackageInstance)
+	{
+		// get the global table
+		lua_pushglobaltable(L);
+
+		NewTable();
+		// this avoid the package to be GC'd
+		LuaBlueprintPackages.Add(Name, LuaBlueprintPackageInstance);
+		LuaBlueprintPackageInstance->SelfTable = ToLuaValue(-1);
+		LuaBlueprintPackageInstance->Init();
+		LuaBlueprintPackageInstance->ReceiveInit();
+		for (TPair<FString, FLuaValue> LuaPair : LuaBlueprintPackageInstance->Table)
+		{
+			FromLuaValue(LuaPair.Value, LuaBlueprintPackageInstance);
+			SetField(-2, TCHAR_TO_ANSI(*LuaPair.Key));
+		}
+		SetField(-2, TCHAR_TO_ANSI(*Name));
+		// pop global table
+		Pop();
+
+		return LuaBlueprintPackageInstance->SelfTable;
+	}
+
+	return FLuaValue();
+}
+
 ULuaState* ULuaState::GetLuaState(UWorld* InWorld)
 {
 	CurrentWorld = InWorld;
@@ -223,35 +252,17 @@ ULuaState* ULuaState::GetLuaState(UWorld* InWorld)
 		SetField(-2, TCHAR_TO_ANSI(*Pair.Key));
 	}
 
+	// pop global table
+	Pop();
+
+	// require LuaBlueprintPackages
 	for (TPair<FString, TSubclassOf<ULuaBlueprintPackage>>& Pair : LuaBlueprintPackagesTable)
 	{
 		if (Pair.Value)
 		{
-			NewTable();
-			ULuaBlueprintPackage* LuaBlueprintPackage = NewObject<ULuaBlueprintPackage>(this, Pair.Value);
-			if (LuaBlueprintPackage)
-			{
-				for (auto LuaPair : LuaBlueprintPackage->Table)
-				{
-					FromLuaValue(LuaPair.Value, LuaBlueprintPackage);
-					SetField(-2, TCHAR_TO_ANSI(*LuaPair.Key));
-				}
-				// this avoid the package to be GC'd
-				LuaBlueprintPackages.Add(Pair.Key, LuaBlueprintPackage);
-				LuaBlueprintPackage->SelfTable = ToLuaValue(-1);
-				LuaBlueprintPackage->Init();
-				LuaBlueprintPackage->ReceiveInit();
-			}
+			RequireLuaBlueprintPackage(Pair.Key, Pair.Value);
 		}
-		else
-		{
-			PushNil();
-		}
-		SetField(-2, TCHAR_TO_ANSI(*Pair.Key));
 	}
-
-	// pop global table
-	Pop();
 
 	// This allows subclasses to do any last minute initialization on lua state before
 	// we load code
@@ -567,7 +578,9 @@ void ULuaState::FromLuaValue(FLuaValue& LuaValue, UObject* CallContext, lua_Stat
 		}
 		lua_rawgeti(this->L, LUA_REGISTRYINDEX, LuaValue.LuaRef);
 		if (this->L != State)
+		{
 			lua_xmove(this->L, State, 1);
+		}
 		break;
 	case ELuaValueType::Function:
 		if (this != LuaValue.LuaState || LuaValue.LuaRef == LUA_NOREF)
@@ -577,7 +590,9 @@ void ULuaState::FromLuaValue(FLuaValue& LuaValue, UObject* CallContext, lua_Stat
 		}
 		lua_rawgeti(this->L, LUA_REGISTRYINDEX, LuaValue.LuaRef);
 		if (this->L != State)
+		{
 			lua_xmove(this->L, State, 1);
+		}
 		break;
 	case ELuaValueType::UObject:
 	{

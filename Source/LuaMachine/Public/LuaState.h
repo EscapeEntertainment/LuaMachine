@@ -542,6 +542,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Lua")
 	void Sandbox();
 
+	UFUNCTION(BlueprintCallable, Category = "Lua")
+	FLuaValue RequireLuaBlueprintPackage(const FString& Name, TSubclassOf<ULuaBlueprintPackage> LuaBlueprintPackage);
+
+	template<typename T>
+	FLuaValue RequireLuaBlueprintPackage(const FString& Name)
+	{
+		return RequireLuaBlueprintPackage(Name, T::StaticClass());
+	}
+
 protected:
 	lua_State* L;
 	bool bDisabled;
