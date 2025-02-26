@@ -1435,39 +1435,13 @@ TArray<FLuaValue> ULuaBlueprintFunctionLibrary::LuaValueResumeMulti(FLuaValue Va
 {
 	TArray<FLuaValue> ReturnValue;
 
-	if (Value.Type != ELuaValueType::Thread)
-		return ReturnValue;
-
 	ULuaState* L = Value.LuaState.Get();
 	if (!L)
+	{
 		return ReturnValue;
-
-	L->FromLuaValue(Value);
-
-	int32 StackTop = L->GetTop();
-
-	int NArgs = 0;
-	for (FLuaValue& Arg : Args)
-	{
-		L->FromLuaValue(Arg);
-		NArgs++;
 	}
 
-	L->Resume(-1 - NArgs, NArgs);
-
-	int32 NumOfReturnValues = (L->GetTop() - StackTop);
-	if (NumOfReturnValues > 0)
-	{
-		for (int32 i = -1; i >= -(NumOfReturnValues); i--)
-		{
-			ReturnValue.Insert(L->ToLuaValue(i), 0);
-		}
-		L->Pop(NumOfReturnValues);
-	}
-
-	L->Pop();
-
-	return ReturnValue;
+	return L->LuaValueResume(Value, Args);
 }
 
 FVector ULuaBlueprintFunctionLibrary::LuaTableToVector(FLuaValue Value)
@@ -1478,22 +1452,22 @@ FVector ULuaBlueprintFunctionLibrary::LuaTableToVector(FLuaValue Value)
 	}
 
 	auto GetVectorField = [](FLuaValue& Table, const char* Field_n, const char* Field_N, int32 Index) -> FLuaValue
-	{
-		FLuaValue N = Table.GetField(Field_n);
-		if (N.IsNil())
 		{
-			N = Table.GetField(Field_N);
+			FLuaValue N = Table.GetField(Field_n);
 			if (N.IsNil())
 			{
-				N = Table.GetFieldByIndex(Index);
+				N = Table.GetField(Field_N);
 				if (N.IsNil())
 				{
-					N = FLuaValue(NAN);
+					N = Table.GetFieldByIndex(Index);
+					if (N.IsNil())
+					{
+						N = FLuaValue(NAN);
+					}
 				}
 			}
-		}
-		return N;
-	};
+			return N;
+		};
 
 	FLuaValue X = GetVectorField(Value, "x", "X", 1);
 	FLuaValue Y = GetVectorField(Value, "y", "Y", 2);

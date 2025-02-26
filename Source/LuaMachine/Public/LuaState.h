@@ -551,6 +551,9 @@ public:
 		return RequireLuaBlueprintPackage(Name, T::StaticClass());
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "Lua")
+	TArray<FLuaValue> LuaValueResume(FLuaValue Value, TArray<FLuaValue> Args);
+
 protected:
 	lua_State* L;
 	bool bDisabled;

@@ -2097,7 +2097,9 @@ bool ULuaState::Resume(int Index, int NArgs)
 {
 	lua_State* Coroutine = lua_tothread(L, Index);
 	if (!Coroutine)
+	{
 		return false;
+	}
 
 	if (lua_status(Coroutine) == LUA_OK && lua_gettop(Coroutine) == 0)
 	{
@@ -2119,6 +2121,48 @@ bool ULuaState::Resume(int Index, int NArgs)
 	lua_pushboolean(L, 1);
 	lua_xmove(Coroutine, L, NRet);
 	return true;
+}
+
+TArray<FLuaValue> ULuaState::LuaValueResume(FLuaValue LuaValue, TArray<FLuaValue> Args)
+{
+	TArray<FLuaValue> ReturnValue;
+
+	if (LuaValue.Type != ELuaValueType::Thread)
+	{
+		return ReturnValue;
+	}
+
+	if (LuaValue.LuaState.Get() != this)
+	{
+		return ReturnValue;
+	}
+
+	FromLuaValue(LuaValue);
+
+	int32 StackTop = GetTop();
+
+	int NArgs = 0;
+	for (FLuaValue& Arg : Args)
+	{
+		FromLuaValue(Arg);
+		NArgs++;
+	}
+
+	Resume(-1 - NArgs, NArgs);
+
+	int32 NumOfReturnValues = (GetTop() - StackTop);
+	if (NumOfReturnValues > 0)
+	{
+		for (int32 i = -1; i >= -(NumOfReturnValues); i--)
+		{
+			ReturnValue.Insert(ToLuaValue(i), 0);
+		}
+		Pop(NumOfReturnValues);
+	}
+
+	Pop();
+
+	return ReturnValue;
 }
 
 int ULuaState::GC(int What, int Data)
