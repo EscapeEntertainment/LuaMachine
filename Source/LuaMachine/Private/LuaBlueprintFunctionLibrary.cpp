@@ -458,10 +458,25 @@ FLuaValue ULuaBlueprintFunctionLibrary::LuaRunString(UObject* WorldContextObject
 	return L->RunString(CodeString, CodePath);
 }
 
+TArray<FLuaValue> ULuaBlueprintFunctionLibrary::LuaRunStringMulti(UObject* WorldContextObject, TSubclassOf<ULuaState> State, const FString& CodeString, FString CodePath)
+{
+	TArray<FLuaValue> ReturnValue;
+
+	ULuaState* L = FLuaMachineModule::Get().GetLuaState(State, WorldContextObject->GetWorld());
+	if (!L)
+	{
+		return ReturnValue;
+	}
+
+	return L->RunStringMulti(CodeString, CodePath);
+}
+
 ELuaThreadStatus ULuaBlueprintFunctionLibrary::LuaThreadGetStatus(FLuaValue Value)
 {
 	if (Value.Type != ELuaValueType::Thread || !Value.LuaState.IsValid())
+	{
 		return ELuaThreadStatus::Invalid;
+	}
 
 	return Value.LuaState->GetLuaThreadStatus(Value);
 }
@@ -1372,38 +1387,11 @@ TArray<FLuaValue> ULuaBlueprintFunctionLibrary::LuaValueCallMulti(FLuaValue Valu
 
 	ULuaState* L = Value.LuaState.Get();
 	if (!L)
+	{
 		return ReturnValue;
-
-	L->FromLuaValue(Value);
-
-	int32 StackTop = L->GetTop();
-
-	int NArgs = 0;
-	for (FLuaValue& Arg : Args)
-	{
-		L->FromLuaValue(Arg);
-		NArgs++;
 	}
 
-	FLuaValue LastReturnValue;
-	if (L->PCall(NArgs, LastReturnValue, LUA_MULTRET))
-	{
-
-		int32 NumOfReturnValues = (L->GetTop() - StackTop) + 1;
-		if (NumOfReturnValues > 0)
-		{
-			for (int32 i = -1; i >= -(NumOfReturnValues); i--)
-			{
-				ReturnValue.Insert(L->ToLuaValue(i), 0);
-			}
-			L->Pop(NumOfReturnValues - 1);
-		}
-
-	}
-
-	L->Pop();
-
-	return ReturnValue;
+	return L->LuaValueCallMulti(Value, Args);
 }
 
 void ULuaBlueprintFunctionLibrary::LuaValueYield(FLuaValue Value, TArray<FLuaValue> Args)

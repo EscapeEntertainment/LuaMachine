@@ -506,6 +506,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Lua")
 	FLuaValue RunString(const FString& CodeString, FString CodePath);
 
+	UFUNCTION(BlueprintCallable, Category = "Lua")
+	TArray<FLuaValue> RunStringMulti(const FString& CodeString, FString CodePath);
+
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Lua")
 	FLuaValue GetLuaValueFromGlobalName(const FString& GlobalName);
 
@@ -514,6 +517,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Lua")
 	FLuaValue LuaValueCall(FLuaValue LuaValue, TArray<FLuaValue> Args);
+
+	UFUNCTION(BlueprintCallable, Category = "Lua")
+	TArray<FLuaValue> LuaValueCallMulti(FLuaValue LuaValue, TArray<FLuaValue> Args);
 
 	UFUNCTION(BlueprintCallable, Category = "Lua")
 	void Error(const FString& ErrorString);

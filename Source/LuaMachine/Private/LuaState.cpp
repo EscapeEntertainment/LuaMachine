@@ -3069,12 +3069,50 @@ FLuaValue ULuaState::RunString(const FString & CodeString, FString CodePath)
 	if (!RunCode(CodeString, CodePath, 1))
 	{
 		if (bLogError)
+		{
 			LogError(LastError);
+		}
 		ReceiveLuaError(LastError);
 	}
 	else
 	{
 		ReturnValue = ToLuaValue(-1);
+	}
+
+	Pop();
+	return ReturnValue;
+}
+
+TArray<FLuaValue> ULuaState::RunStringMulti(const FString & CodeString, FString CodePath)
+{
+	TArray<FLuaValue>
+		ReturnValue;
+	if (CodePath.IsEmpty())
+	{
+		CodePath = CodeString;
+	}
+
+	int32 StackTop = GetTop();
+
+	if (!RunCode(CodeString, CodePath, LUA_MULTRET))
+	{
+		if (bLogError)
+		{
+			LogError(LastError);
+		}
+		ReceiveLuaError(LastError);
+	}
+	else
+	{
+		int32 NumOfReturnValues = GetTop() - StackTop;
+		if (NumOfReturnValues > 0)
+		{
+			for (int32 i = -1; i >= -(NumOfReturnValues); i--)
+			{
+				ReturnValue.Insert(ToLuaValue(i), 0);
+			}
+			Pop(NumOfReturnValues - 1);
+		}
 	}
 
 	Pop();
@@ -3108,6 +3146,41 @@ FLuaValue ULuaState::LuaValueCall(FLuaValue LuaValue, TArray<FLuaValue> Args)
 	}
 
 	PCall(NArgs, ReturnValue);
+
+	Pop();
+
+	return ReturnValue;
+}
+
+TArray<FLuaValue> ULuaState::LuaValueCallMulti(FLuaValue LuaValue, TArray<FLuaValue> Args)
+{
+	TArray<FLuaValue> ReturnValue;
+
+	FromLuaValue(LuaValue);
+
+	int32 StackTop = GetTop();
+
+	int NArgs = 0;
+	for (FLuaValue& Arg : Args)
+	{
+		FromLuaValue(Arg);
+		NArgs++;
+	}
+
+	FLuaValue LastReturnValue;
+	if (PCall(NArgs, LastReturnValue, LUA_MULTRET))
+	{
+		int32 NumOfReturnValues = (GetTop() - StackTop) + 1;
+		if (NumOfReturnValues > 0)
+		{
+			for (int32 i = -1; i >= -(NumOfReturnValues); i--)
+			{
+				ReturnValue.Insert(ToLuaValue(i), 0);
+			}
+			Pop(NumOfReturnValues - 1);
+		}
+
+	}
 
 	Pop();
 

@@ -396,7 +396,9 @@ TArray<uint8> FLuaValue::ToBytes() const
 {
 	TArray<uint8> Bytes;
 	if (Type != ELuaValueType::String)
+	{
 		return Bytes;
+	}
 
 	const int32 StringLength = String.Len();
 	Bytes.AddUninitialized(StringLength);
