@@ -13,7 +13,7 @@ public class LuaMachine : ModuleRules
         Unknown
     }
 
-    protected LuaVMType VMType = LuaVMType.LuaU;
+    protected LuaVMType VMType = LuaVMType.LuaJIT;
 
     public LuaMachine(ReadOnlyTargetRules Target) : base(Target)
     {
@@ -130,6 +130,19 @@ public class LuaMachine : ModuleRules
         else
         {
             PublicDefinitions.Add("LUAMACHINE_LUAU=0");
+        }
+
+        if (VMType == LuaVMType.LuaJIT)
+        {
+            PublicDefinitions.Add("LUAMACHINE_LUAJIT=1");
+            if (Target.Platform == UnrealTargetPlatform.Win64)
+            {
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "x64", "luajit_win64.lib"));
+            }
+        }
+        else
+        {
+            PublicDefinitions.Add("LUAMACHINE_LUAJIT=0");
         }
 
     }

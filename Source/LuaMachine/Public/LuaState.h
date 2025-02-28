@@ -402,9 +402,7 @@ public:
 	static void OnAllocateCallback(lua_State* L, size_t OSize, size_t NSize);
 	static void OnInterrupt(lua_State* L, int gc);
 
-#if LUAMACHINE_LUA53
 	static void Debug_Hook(lua_State* L, lua_Debug* ar);
-#endif
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Lua")
 	static TArray<uint8> ToByteCode(const FString& Code, const FString& CodePath, FString& ErrorString);

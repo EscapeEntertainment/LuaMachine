@@ -438,7 +438,7 @@ bool ULuaState::RunCode(const TArray<uint8>& Code, const FString& CodePath, int 
 {
 	FString FullCodePath = FString("@") + CodePath;
 
-#if LUAMACHINE_LUA53
+#if LUAMACHINE_LUA53 || LUAMACHINE_LUAJIT
 	if (luaL_loadbuffer(L, (const char*)Code.GetData(), Code.Num(), TCHAR_TO_ANSI(*FullCodePath)))
 #elif LUAMACHINE_LUAU
 	size_t ByteCodeSize = 0;
@@ -1026,10 +1026,12 @@ int ULuaState::MetaTableFunctionUserDataInterface__gc(lua_State* L)
 
 FLuaDebug ULuaState::LuaGetInfo(int32 Level)
 {
-#if LUAMACHINE_LUA53
+#if LUAMACHINE_LUA53 || LUAMACHINE_LUAJIT
 	lua_Debug ar;
 	if (lua_getstack(L, Level, &ar) != 1)
+	{
 		return FLuaDebug();
+	}
 	lua_getinfo(L, "lSn", &ar);
 	FLuaDebug LuaDebug;
 	LuaDebug.CurrentLine = ar.currentline;
@@ -1046,7 +1048,7 @@ FLuaDebug ULuaState::LuaGetInfo(int32 Level)
 
 TMap<FString, FLuaValue> ULuaState::LuaGetLocals(int32 Level)
 {
-#if LUAMACHINE_LUA53
+#if LUAMACHINE_LUA53 || LUAMACHINE_LUAJIT
 	TMap<FString, FLuaValue> ReturnValue;
 
 	lua_Debug ar;
@@ -1068,9 +1070,9 @@ TMap<FString, FLuaValue> ULuaState::LuaGetLocals(int32 Level)
 #endif
 }
 
-#if LUAMACHINE_LUA53
 void ULuaState::Debug_Hook(lua_State* L, lua_Debug* ar)
 {
+#if LUAMACHINE_LUA53 || LUAMACHINE_LUAJIT
 	ULuaState* LuaState = ULuaState::GetFromExtraSpace(L);
 	FLuaDebug LuaDebug;
 	lua_getinfo(L, "lSn", ar);
@@ -1097,8 +1099,8 @@ void ULuaState::Debug_Hook(lua_State* L, lua_Debug* ar)
 	default:
 		break;
 	}
-}
 #endif
+}
 
 int ULuaState::MetaTableFunctionUserData__eq(lua_State* L)
 {
@@ -2109,7 +2111,11 @@ bool ULuaState::Resume(int Index, int NArgs)
 	}
 
 	lua_xmove(L, Coroutine, NArgs);
+#if LUAMACHINE_LUAJIT
+	int Ret = lua_resume(Coroutine, NArgs);
+#else
 	int Ret = lua_resume(Coroutine, L, NArgs);
+#endif
 	if (Ret != LUA_OK && Ret != LUA_YIELD)
 	{
 		lua_pushboolean(L, 0);
@@ -3195,8 +3201,26 @@ TArray<FLuaValue> ULuaState::LuaValueCallMulti(FLuaValue LuaValue, TArray<FLuaVa
 	return ReturnValue;
 }
 
-#if LUAMACHINE_LUAU
 // from https://github.com/lunarmodules/lua-compat-5.3/blob/master/c-api/compat-5.3.c
+
+#if LUAMACHINE_LUAU
+
+void* lua_getextraspace(lua_State * L)
+{
+	lua_Callbacks* Callbacks = lua_callbacks(L);
+	return &Callbacks->userdata;
+}
+
+int luaL_ref(lua_State * L, int t)
+{
+	int Ref = lua_ref(L, -1);
+	lua_pop(L, 1);
+	return Ref;
+}
+#endif
+
+#if LUAMACHINE_LUAU || LUAMACHINE_LUAJIT
+
 int lua_isinteger(lua_State * L, int index)
 {
 	if (lua_type(L, index) == LUA_TNUMBER)
@@ -3218,12 +3242,6 @@ void lua_seti(lua_State * L, int index, lua_Integer i)
 	lua_pushinteger(L, i);
 	lua_insert(L, -2);
 	lua_settable(L, index);
-}
-
-void* lua_getextraspace(lua_State * L)
-{
-	lua_Callbacks* Callbacks = lua_callbacks(L);
-	return &Callbacks->userdata;
 }
 
 void lua_len(lua_State * L, int i)
@@ -3261,11 +3279,74 @@ lua_Integer luaL_len(lua_State * L, int i)
 	}
 	return res;
 }
+#endif
 
-int luaL_ref(lua_State * L, int t)
+#if LUAMACHINE_LUAJIT
+
+int lua_absindex(lua_State * L, int i)
 {
-	int Ref = lua_ref(L, -1);
-	lua_pop(L, 1);
-	return Ref;
+	if (i < 0 && i > LUA_REGISTRYINDEX)
+	{
+		i += lua_gettop(L) + 1;
+	}
+	return i;
+}
+
+void* lua_getextraspace(lua_State * L)
+{
+	int is_main = 0;
+	void* ptr = NULL;
+	luaL_checkstack(L, 4, "not enough stack slots available");
+	lua_pushliteral(L, "__compat53_extraspace");
+	lua_pushvalue(L, -1);
+	lua_rawget(L, LUA_REGISTRYINDEX);
+	if (!lua_istable(L, -1))
+	{
+		lua_pop(L, 1);
+		lua_createtable(L, 0, 2);
+		lua_createtable(L, 0, 1);
+		lua_pushliteral(L, "k");
+		lua_setfield(L, -2, "__mode");
+		lua_setmetatable(L, -2);
+		lua_pushvalue(L, -2);
+		lua_pushvalue(L, -2);
+		lua_rawset(L, LUA_REGISTRYINDEX);
+	}
+	lua_replace(L, -2);
+	is_main = lua_pushthread(L);
+	lua_rawget(L, -2);
+	ptr = lua_touserdata(L, -1);
+	if (!ptr)
+	{
+		lua_pop(L, 1);
+		ptr = lua_newuserdata(L, LUA_EXTRASPACE);
+		if (is_main)
+		{
+			memset(ptr, '\0', LUA_EXTRASPACE);
+			lua_pushthread(L);
+			lua_pushvalue(L, -2);
+			lua_rawset(L, -4);
+			lua_pushboolean(L, 1);
+			lua_pushvalue(L, -2);
+			lua_rawset(L, -4);
+		}
+		else
+		{
+			void* mptr = NULL;
+			lua_pushboolean(L, 1);
+			lua_rawget(L, -3);
+			mptr = lua_touserdata(L, -1);
+			if (mptr)
+				memcpy(ptr, mptr, LUA_EXTRASPACE);
+			else
+				memset(ptr, '\0', LUA_EXTRASPACE);
+			lua_pop(L, 1);
+			lua_pushthread(L);
+			lua_pushvalue(L, -2);
+			lua_rawset(L, -4);
+		}
+	}
+	lua_pop(L, 2);
+	return ptr;
 }
 #endif
