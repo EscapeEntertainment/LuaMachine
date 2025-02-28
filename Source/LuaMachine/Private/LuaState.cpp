@@ -104,7 +104,7 @@ ULuaState* ULuaState::GetLuaState(UWorld* InWorld)
 		luaL_openlibs(L);
 	}
 
-#if LUAMACHINE_LUA53
+#if LUAMACHINE_LUA53 || LUAMACHINE_LUAJIT
 	// load "package" for allowing minimal setup
 	luaL_requiref(L, "package", luaopen_package, 1);
 	lua_pop(L, 1);
@@ -117,11 +117,13 @@ ULuaState* ULuaState::GetLuaState(UWorld* InWorld)
 			lua_pop(L, 1);
 		}
 
+#if !LUAMACHINE_LUAJIT
 		if (LuaLibsLoader.bLoadCoroutine)
 		{
 			luaL_requiref(L, "coroutine", luaopen_coroutine, 1);
 			lua_pop(L, 1);
 		}
+#endif
 
 		if (LuaLibsLoader.bLoadTable)
 		{
@@ -153,11 +155,13 @@ ULuaState* ULuaState::GetLuaState(UWorld* InWorld)
 			lua_pop(L, 1);
 		}
 
+#if !LUAMACHINE_LUAJIT
 		if (LuaLibsLoader.bLoadUTF8)
 		{
 			luaL_requiref(L, "utf8", luaopen_utf8, 1);
 			lua_pop(L, 1);
 		}
+#endif
 
 		if (LuaLibsLoader.bLoadDebug)
 		{
@@ -236,6 +240,7 @@ ULuaState* ULuaState::GetLuaState(UWorld* InWorld)
 	// pop package.prelod
 	Pop(1);
 
+#if !LUAMACHINE_LUAJIT
 	// manage searchers
 	GetField(-1, "searchers");
 	PushCFunction(ULuaState::TableFunction_package_loader);
@@ -244,6 +249,10 @@ ULuaState* ULuaState::GetLuaState(UWorld* InWorld)
 
 	// pop package.searchers (and package)
 	Pop(2);
+#else
+	Pop(1);
+#endif
+
 #endif
 
 	for (TPair<FString, FLuaValue>& Pair : Table)
@@ -268,7 +277,7 @@ ULuaState* ULuaState::GetLuaState(UWorld* InWorld)
 	// we load code
 	ReceiveLuaStatePreInitialized();
 
-#if LUAMACHINE_LUA53
+#if LUAMACHINE_LUA53 || LUAMACHINE_LUAJIT
 	int DebugMask = 0;
 	// install hooks
 	if (bEnableLineHook)
@@ -484,7 +493,7 @@ TArray<uint8> ULuaState::ToByteCode(const FString& Code, const FString& CodePath
 	FString FullCodePath = FString("@") + CodePath;
 	TArray<uint8> Output;
 
-#if LUAMACHINE_LUA53
+#if LUAMACHINE_LUA53 || LUAMACHINE_LUAJIT
 	lua_State* L = luaL_newstate();
 	if (luaL_loadbuffer(L, TCHAR_TO_UTF8(CodeRaw), FCStringAnsi::Strlen(TCHAR_TO_UTF8(CodeRaw)), TCHAR_TO_ANSI(*FullCodePath)))
 	{
@@ -494,7 +503,11 @@ TArray<uint8> ULuaState::ToByteCode(const FString& Code, const FString& CodePath
 		return Output;
 	}
 
+#if LUAMACHINE_LUAJIT
+	if (lua_dump(L, ULuaState::ToByteCode_Writer, &Output))
+#else
 	if (lua_dump(L, ULuaState::ToByteCode_Writer, &Output, 1))
+#endif
 	{
 		ErrorString = ANSI_TO_TCHAR(lua_tostring(L, -1));
 		Output.Empty();
@@ -3348,5 +3361,46 @@ void* lua_getextraspace(lua_State * L)
 	}
 	lua_pop(L, 2);
 	return ptr;
+}
+
+int luaL_getsubtable(lua_State * L, int i, const char* name) {
+	int abs_i = lua_absindex(L, i);
+	luaL_checkstack(L, 3, "not enough stack slots");
+	lua_pushstring(L, name);
+	lua_gettable(L, abs_i);
+	if (lua_istable(L, -1))
+		return 1;
+	lua_pop(L, 1);
+	lua_newtable(L);
+	lua_pushstring(L, name);
+	lua_pushvalue(L, -2);
+	lua_settable(L, abs_i);
+	return 0;
+}
+
+void luaL_requiref(lua_State * L, const char* modname, lua_CFunction openf, int glb)
+{
+	luaL_checkstack(L, 3, "not enough stack slots available");
+	luaL_getsubtable(L, LUA_REGISTRYINDEX, "_LOADED");
+	lua_getfield(L, -1, modname);
+	if (lua_isnil(L, -1))
+	{
+		lua_pop(L, 1);
+		lua_pushcfunction(L, openf);
+		lua_pushstring(L, modname);
+		lua_call(L, 1, 1);
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -3, modname);
+	}
+	else
+	{
+		lua_pop(L, 1);
+	}
+	if (glb)
+	{
+		lua_pushvalue(L, -1);
+		lua_setglobal(L, modname);
+	}
+	lua_replace(L, -2);
 }
 #endif

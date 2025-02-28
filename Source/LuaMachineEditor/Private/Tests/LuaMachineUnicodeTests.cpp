@@ -5,6 +5,8 @@
 #include "LuaBlueprintFunctionLibrary.h"
 #include "Misc/AutomationTest.h"
 
+#if !LUAMACHINE_LUAJIT
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLuaMachineUnicodeTest_Simple, "LuaMachine.UnitTests.Unicode.Simple", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
 bool FLuaMachineUnicodeTest_Simple::RunTest(const FString& Parameters)
@@ -65,5 +67,7 @@ bool FLuaMachineUnicodeTest_Codes::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif
 
 #endif

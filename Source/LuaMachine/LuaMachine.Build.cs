@@ -8,7 +8,7 @@ public class LuaMachine : ModuleRules
     {
         Lua53,
         Lua54,
-        LuaU,
+        Luau,
         LuaJIT,
         Unknown
     }
@@ -117,7 +117,7 @@ public class LuaMachine : ModuleRules
             PublicDefinitions.Add("LUAMACHINE_LUA53=0");
         }
 
-        if (VMType == LuaVMType.LuaU)
+        if (VMType == LuaVMType.Luau)
         {
             PublicDefinitions.Add("LUAMACHINE_LUAU=1");
             if (Target.Platform == UnrealTargetPlatform.Win64)

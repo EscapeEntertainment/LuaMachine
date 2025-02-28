@@ -30,8 +30,11 @@ lua_Integer luaL_len(lua_State* L, int i);
 #define LUAMACHINE_RETURN_ERROR(L, Fmt, ...) luaL_error(L, Fmt, ##__VA_ARGS__)
 
 #elif LUAMACHINE_LUAJIT
-#include "ThirdParty/luajit/lauxlib.h"
-#include "ThirdParty/luajit/lualib.h"
+extern "C"
+{
+	#include "ThirdParty/luajit/lauxlib.h"
+	#include "ThirdParty/luajit/lualib.h"
+}
 
 #ifndef LUA_EXTRASPACE
 #define LUA_EXTRASPACE (sizeof(void*))
@@ -47,6 +50,9 @@ lua_Integer luaL_len(lua_State* L, int i);
 
 int lua_isinteger(lua_State* L, int index);
 void lua_seti(lua_State* L, int index, lua_Integer i);
+
+int luaL_getsubtable(lua_State* L, int i, const char* name);
+void luaL_requiref(lua_State* L, const char* modname, lua_CFunction openf, int glb);
 
 #define LUAMACHINE_RETURN_ERROR(L, Fmt, ...) return luaL_error(L, Fmt, ##__VA_ARGS__)
 #endif
