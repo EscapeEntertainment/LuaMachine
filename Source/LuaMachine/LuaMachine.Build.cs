@@ -13,7 +13,7 @@ public class LuaMachine : ModuleRules
         Unknown
     }
 
-    protected LuaVMType VMType = LuaVMType.LuaJIT;
+    protected LuaVMType VMType = LuaVMType.Luau;
 
     public LuaMachine(ReadOnlyTargetRules Target) : base(Target)
     {
