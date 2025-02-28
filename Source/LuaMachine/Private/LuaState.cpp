@@ -3045,17 +3045,25 @@ void ULuaState::SetLuaValueFromGlobalName(const FString & Name, FLuaValue LuaVal
 
 void ULuaState::SetLuaTableReadonly(FLuaValue LuaValue, const bool bEnabled)
 {
+#if LUAMACHINE_LUAU
 	if (LuaValue.Type != ELuaValueType::Table)
 	{
 		return;
 	}
 	FromLuaValue(LuaValue);
 	lua_setreadonly(L, -1, bEnabled ? 1 : 0);
+#else
+	Error("Sandboxing is not supported in the current VM");
+#endif
 }
 
 void ULuaState::Sandbox()
 {
+#if LUAMACHINE_LUAU
 	luaL_sandbox(L);
+#else
+	Error("Sandboxing is not supported in the current VM");
+#endif
 }
 
 FLuaValue ULuaState::RunString(const FString & CodeString, FString CodePath)
