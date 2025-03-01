@@ -308,6 +308,8 @@ ULuaState* ULuaState::GetLuaState(UWorld* InWorld)
 		Callbacks->onallocate = OnAllocateCallback;
 		Callbacks->interrupt = OnInterrupt;
 	}
+
+	Callbacks->debugstep = Debug_SingleStep;
 #endif
 
 	if (LuaCodeAsset)
@@ -315,7 +317,9 @@ ULuaState* ULuaState::GetLuaState(UWorld* InWorld)
 		if (!RunCodeAsset(LuaCodeAsset))
 		{
 			if (bLogError)
+			{
 				LogError(LastError);
+			}
 			ReceiveLuaError(LastError);
 			bDisabled = true;
 			return nullptr;
@@ -394,9 +398,15 @@ int32 ULuaState::LuaValueLength(FLuaValue LuaValue)
 	return Length;
 }
 
+void ULuaState::SetSingleStep(const bool bEnable)
+{
+#if LUAMACHINE_LUAU
+	lua_singlestep(L, bEnable ? 1 : 0);
+#endif
+}
+
 bool ULuaState::RunCodeAsset(ULuaCode* CodeAsset, int NRet)
 {
-
 	if (CodeAsset->bCooked && CodeAsset->bCookAsBytecode)
 	{
 #if PLATFORM_ANDROID
@@ -408,7 +418,6 @@ bool ULuaState::RunCodeAsset(ULuaCode* CodeAsset, int NRet)
 	}
 
 	return RunCode(CodeAsset->Code.ToString(), CodeAsset->GetPathName(), NRet);
-
 }
 
 bool ULuaState::RunFile(const FString& Filename, bool bIgnoreNonExistent, int NRet, bool bNonContentDirectory)
@@ -1049,24 +1058,30 @@ int ULuaState::MetaTableFunctionUserDataInterface__gc(lua_State* L)
 
 FLuaDebug ULuaState::LuaGetInfo(int32 Level)
 {
-#if LUAMACHINE_LUA53 || LUAMACHINE_LUAJIT
 	lua_Debug ar;
+	FLuaDebug LuaDebug;
+#if LUAMACHINE_LUA53 || LUAMACHINE_LUAJIT
 	if (lua_getstack(L, Level, &ar) != 1)
 	{
-		return FLuaDebug();
+		return LuaDebug;
 	}
 	lua_getinfo(L, "lSn", &ar);
-	FLuaDebug LuaDebug;
+
 	LuaDebug.CurrentLine = ar.currentline;
 	LuaDebug.Source = ANSI_TO_TCHAR(ar.source);
 	LuaDebug.Name = ANSI_TO_TCHAR(ar.name);
 	LuaDebug.NameWhat = ANSI_TO_TCHAR(ar.namewhat);
 	LuaDebug.What = ANSI_TO_TCHAR(ar.what);
+#elif LUAMACHINE_LUAU
+	lua_getinfo(L, Level, "lsn", &ar);
+
+	LuaDebug.CurrentLine = ar.currentline;
+	LuaDebug.Source = ANSI_TO_TCHAR(ar.source);
+	LuaDebug.Name = ANSI_TO_TCHAR(ar.name);
+	LuaDebug.What = ANSI_TO_TCHAR(ar.what);
+#endif
 
 	return LuaDebug;
-#elif LUAMACHINE_LUAU
-	return FLuaDebug();
-#endif
 }
 
 TMap<FString, FLuaValue> ULuaState::LuaGetLocals(int32 Level)
@@ -1122,6 +1137,21 @@ void ULuaState::Debug_Hook(lua_State* L, lua_Debug* ar)
 	default:
 		break;
 	}
+#endif
+}
+
+void ULuaState::Debug_SingleStep(lua_State* L, lua_Debug* ar)
+{
+#if LUAMACHINE_LUAU
+	ULuaState* LuaState = ULuaState::GetFromExtraSpace(L);
+	FLuaDebug LuaDebug;
+	lua_getinfo(L, 0, "lSn", ar);
+	LuaDebug.CurrentLine = ar->currentline;
+	LuaDebug.Source = ANSI_TO_TCHAR(ar->source);
+	LuaDebug.Name = ANSI_TO_TCHAR(ar->name);
+	LuaDebug.What = ANSI_TO_TCHAR(ar->what);
+
+	LuaState->ReceiveLuaSingleStepHook(LuaDebug);
 #endif
 }
 
@@ -1867,6 +1897,11 @@ void ULuaState::ReceiveLuaStatePreInitialized_Implementation()
 }
 
 void ULuaState::ReceiveLuaStateInitialized_Implementation()
+{
+
+}
+
+void ULuaState::ReceiveLuaSingleStepHook_Implementation(const FLuaDebug & LuaDebug)
 {
 
 }

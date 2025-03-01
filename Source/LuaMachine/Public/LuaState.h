@@ -209,6 +209,9 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category = "Lua", meta = (DisplayName = "Lua Return Hook"))
 	void ReceiveLuaReturnHook(const FLuaDebug& LuaDebug);
 
+	UFUNCTION(BlueprintNativeEvent, Category = "Lua", meta = (DisplayName = "Lua SingleStep Hook"))
+	void ReceiveLuaSingleStepHook(const FLuaDebug& LuaDebug);
+
 	// Not BlueprintNativeEvent, as throwing a luaL_error from an RTTI call results in leaving the VM in an unexpected
 	// state and will result in exceptions
 	UFUNCTION(Category = "Lua", meta = (DisplayName = "Lua Count Hook"))
@@ -404,6 +407,8 @@ public:
 
 	static void Debug_Hook(lua_State* L, lua_Debug* ar);
 
+	static void Debug_SingleStep(lua_State* L, lua_Debug* ar);
+
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Lua")
 	static TArray<uint8> ToByteCode(const FString& Code, const FString& CodePath, FString& ErrorString);
 
@@ -560,6 +565,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Lua")
 	int32 LuaValueLength(FLuaValue LuaValue);
+
+	UFUNCTION(BlueprintCallable, Category = "Lua")
+	void SetSingleStep(const bool bEnable);
 
 protected:
 	lua_State* L;

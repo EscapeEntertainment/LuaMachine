@@ -145,6 +145,31 @@ bool FLuaMachineStateTest_Sandbox::RunTest(const FString& Parameters)
 	return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLuaMachineStateTest_SingleStep, "LuaMachine.UnitTests.State.SingleStep", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FLuaMachineStateTest_SingleStep::RunTest(const FString& Parameters)
+{
+	UWorld* TestWorld = UWorld::CreateWorld(EWorldType::Inactive, false);
+
+	ULuaUnitTestState* UnitTestState = ULuaState::CreateDynamicLuaState<ULuaUnitTestState>(TestWorld);
+
+	UnitTestState->SetSingleStep(true);
+
+	UnitTestState->RunString("function test() x = 100; y = 200; z = 300; end; test()", "");
+
+	TestTrue(TEXT("LuaState->StepCount > 0"), UnitTestState->StepCount > 0);
+
+	UnitTestState->StepCount = 0;
+
+	UnitTestState->SetSingleStep(false);
+
+	UnitTestState->RunString("function test2() x = 100; y = 200; z = 300; end; test2()", "");
+
+	TestTrue(TEXT("LuaState->StepCount == 0"), UnitTestState->StepCount == 0);
+
+	return true;
+}
+
 #endif
 
 #endif
