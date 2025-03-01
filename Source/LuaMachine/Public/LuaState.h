@@ -556,7 +556,10 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Lua")
-	TArray<FLuaValue> LuaValueResume(FLuaValue Value, TArray<FLuaValue> Args);
+	TArray<FLuaValue> LuaValueResume(FLuaValue LuaValue, TArray<FLuaValue> Args);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Lua")
+	int32 LuaValueLength(FLuaValue LuaValue);
 
 protected:
 	lua_State* L;

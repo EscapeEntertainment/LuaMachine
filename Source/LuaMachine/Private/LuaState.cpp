@@ -384,6 +384,16 @@ FLuaValue ULuaState::GetLuaBlueprintPackageTable(const FString& PackageName)
 	return LuaBlueprintPackages[PackageName]->SelfTable;
 }
 
+int32 ULuaState::LuaValueLength(FLuaValue LuaValue)
+{
+	FromLuaValue(LuaValue);
+	Len(-1);
+	const int32 Length = ToInteger(-1);
+	Pop(2);
+
+	return Length;
+}
+
 bool ULuaState::RunCodeAsset(ULuaCode* CodeAsset, int NRet)
 {
 

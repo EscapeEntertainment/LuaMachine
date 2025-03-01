@@ -1514,14 +1514,11 @@ int32 ULuaBlueprintFunctionLibrary::LuaValueLength(FLuaValue Value)
 
 	ULuaState* L = Value.LuaState.Get();
 	if (!L)
+	{
 		return 0;
+	}
 
-	L->FromLuaValue(Value);
-	L->Len(-1);
-	int32 Length = L->ToInteger(-1);
-	L->Pop(2);
-
-	return Length;
+	return L->LuaValueLength(Value);
 }
 
 TArray<FLuaValue> ULuaBlueprintFunctionLibrary::LuaTableGetKeys(FLuaValue Table)
