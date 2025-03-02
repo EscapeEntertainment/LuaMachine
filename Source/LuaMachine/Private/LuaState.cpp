@@ -54,6 +54,54 @@ void ULuaState::OnInterrupt(lua_State* L, int gc)
 	}
 }
 
+void ULuaState::OnProfile(lua_State* L, int gc)
+{
+	ULuaState* LuaState = ULuaState::GetFromExtraSpace(L);
+	if (LuaState->PreviousOnInterrupt)
+	{
+		LuaState->PreviousOnInterrupt(L, gc);
+	}
+
+	double Now = LuaState->GetWorld()->GetRealTimeSeconds();
+
+	if (Now - LuaState->LastProfilerRealTimeSeconds >= LuaState->ProfilerFrequency)
+	{
+		FLuaProfiledStack ProfiledStack;
+#if LUAMACHINE_LUAU
+		lua_Debug LuaDebug;
+		if (gc)
+		{
+			FLuaProfiledCall ProfiledCall;
+			ProfiledCall.Source = "GC";
+			ProfiledCall.Call = "GC";
+			ProfiledStack.CallStack.Add(MoveTemp(ProfiledCall));
+		}
+		else
+		{
+			for (int32 Level = 0; lua_getinfo(L, Level, "sn", &LuaDebug); ++Level)
+			{
+				FLuaProfiledCall ProfiledCall;
+				ProfiledCall.Source = ANSI_TO_TCHAR(LuaDebug.short_src);
+				ProfiledCall.Call = ANSI_TO_TCHAR(LuaDebug.name);
+				ProfiledCall.Line = LuaDebug.linedefined;
+				ProfiledStack.CallStack.Add(MoveTemp(ProfiledCall));
+			}
+		}
+#endif
+		if (!LuaState->CurrentProfiledStacks.Contains(ProfiledStack))
+		{
+			LuaState->CurrentProfiledStacks.Add(ProfiledStack);
+		}
+
+		LuaState->CurrentProfiledStacks[ProfiledStack].Count++;
+		LuaState->CurrentProfiledStacks[ProfiledStack].Duration = Now - LuaState->LastProfilerRealTimeSeconds;
+
+		LuaState->ProfilerSamples++;
+	}
+
+	LuaState->LastProfilerRealTimeSeconds = Now;
+}
+
 FLuaValue ULuaState::RequireLuaBlueprintPackage(const FString& Name, TSubclassOf<ULuaBlueprintPackage> LuaBlueprintPackage)
 {
 	ULuaBlueprintPackage* LuaBlueprintPackageInstance = NewObject<ULuaBlueprintPackage>(this, LuaBlueprintPackage);
@@ -1069,6 +1117,7 @@ FLuaDebug ULuaState::LuaGetInfo(int32 Level)
 
 	LuaDebug.CurrentLine = ar.currentline;
 	LuaDebug.Source = ANSI_TO_TCHAR(ar.source);
+	LuaDebug.ShortSource = FPaths::GetCleanFilename(LuaDebug.Source);
 	LuaDebug.Name = ANSI_TO_TCHAR(ar.name);
 	LuaDebug.NameWhat = ANSI_TO_TCHAR(ar.namewhat);
 	LuaDebug.What = ANSI_TO_TCHAR(ar.what);
@@ -3257,6 +3306,40 @@ TArray<FLuaValue> ULuaState::LuaValueCallMulti(FLuaValue LuaValue, TArray<FLuaVa
 	Pop();
 
 	return ReturnValue;
+}
+
+void ULuaState::StartProfiler(const double Frequency)
+{
+#if LUAMACHINE_LUAU
+	lua_Callbacks* Callbacks = lua_callbacks(L);
+	// profiler is already running
+	if (Callbacks->interrupt == OnProfile)
+	{
+		UE_LOG(LogLuaMachine, Warning, TEXT("Profiler is already running."));
+		return;
+	}
+	PreviousOnInterrupt = Callbacks->interrupt;
+
+	Callbacks->interrupt = OnProfile;
+
+	ProfilerFrequency = Frequency;
+	LastProfilerRealTimeSeconds = GetWorld()->GetRealTimeSeconds();
+	ProfilerSamples = 0;
+#endif
+}
+
+TMap<FLuaProfiledStack, FLuaProfiledData> ULuaState::StopProfiler()
+{
+	TMap<FLuaProfiledStack, FLuaProfiledData> ProfiledStacks = CurrentProfiledStacks;
+
+#if LUAMACHINE_LUAU
+	lua_Callbacks* Callbacks = lua_callbacks(L);
+	Callbacks->interrupt = PreviousOnInterrupt;
+#endif
+
+	CurrentProfiledStacks.Empty();
+
+	return ProfiledStacks;
 }
 
 // from https://github.com/lunarmodules/lua-compat-5.3/blob/master/c-api/compat-5.3.c

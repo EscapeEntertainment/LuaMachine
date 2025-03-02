@@ -124,12 +124,78 @@ struct FLuaDebug
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Lua")
 	FString What;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Lua")
+	FString ShortSource;
+
 	FLuaDebug()
 		: CurrentLine(0)
 	{
 
 	}
 };
+
+USTRUCT(BlueprintType)
+struct FLuaProfiledCall
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Lua")
+	FString Source;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Lua")
+	int32 Line;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Lua")
+	FString Call;
+
+	bool operator==(const FLuaProfiledCall& Other) const
+	{
+		return Source == Other.Source && Line == Other.Line && Call == Other.Call;
+	}
+};
+
+USTRUCT(BlueprintType)
+struct FLuaProfiledStack
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Lua")
+	TArray<FLuaProfiledCall> CallStack;
+
+	bool operator==(const FLuaProfiledStack& Other) const
+	{
+		return CallStack == Other.CallStack;
+	}
+};
+
+USTRUCT(BlueprintType)
+struct FLuaProfiledData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Lua")
+	TArray<FLuaProfiledCall> CallStack;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Lua")
+	double Duration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Lua")
+	int64 Count;
+};
+
+FORCEINLINE uint32 GetTypeHash(const FLuaProfiledStack& LuaProfiledStack)
+{
+	uint32 Hash = 0;
+
+	for (const FLuaProfiledCall& Call : LuaProfiledStack.CallStack)
+	{
+		Hash = HashCombine(Hash, GetTypeHash(Call.Source));
+		Hash = HashCombine(Hash, GetTypeHash(Call.Line));
+		Hash = HashCombine(Hash, GetTypeHash(Call.Call));
+	}
+
+	return Hash;
+}
 
 USTRUCT(BlueprintType)
 struct FLuaDelegateGroup
@@ -405,6 +471,8 @@ public:
 	static void OnAllocateCallback(lua_State* L, size_t OSize, size_t NSize);
 	static void OnInterrupt(lua_State* L, int gc);
 
+	static void OnProfile(lua_State* L, int gc);
+
 	static void Debug_Hook(lua_State* L, lua_Debug* ar);
 
 	static void Debug_SingleStep(lua_State* L, lua_Debug* ar);
@@ -569,6 +637,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Lua")
 	void SetSingleStep(const bool bEnable);
 
+	UFUNCTION(BlueprintCallable, Category = "Lua")
+	void StartProfiler(const double Frequency = 0);
+
+	UFUNCTION(BlueprintCallable, Category = "Lua")
+	TMap<FLuaProfiledStack, FLuaProfiledData> StopProfiler();
+
 protected:
 	lua_State* L;
 	bool bDisabled;
@@ -589,6 +663,14 @@ protected:
 	FLuaCommandExecutor LuaConsole;
 
 	int64 CurrentMemoryUsage;
+
+	TMap<FLuaProfiledStack, FLuaProfiledData> CurrentProfiledStacks;
+
+	void (*PreviousOnInterrupt)(lua_State* L, int gc) = nullptr;
+
+	double ProfilerFrequency = 0;
+	double LastProfilerRealTimeSeconds = 0;
+	int64 ProfilerSamples = 0;
 };
 
 #define LUACFUNCTION(FuncClass, FuncName, NumRetValues, NumArgs) static int FuncName ## _C(lua_State* L)\
