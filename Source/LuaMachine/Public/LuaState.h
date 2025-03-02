@@ -143,7 +143,7 @@ struct FLuaProfiledCall
 	FString Source;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Lua")
-	int32 Line;
+	int32 Line = -1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Lua")
 	FString Call;
@@ -177,10 +177,10 @@ struct FLuaProfiledData
 	TArray<FLuaProfiledCall> CallStack;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Lua")
-	double Duration;
+	double Duration = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Lua")
-	int64 Count;
+	int64 Count = 0;
 };
 
 FORCEINLINE uint32 GetTypeHash(const FLuaProfiledStack& LuaProfiledStack)

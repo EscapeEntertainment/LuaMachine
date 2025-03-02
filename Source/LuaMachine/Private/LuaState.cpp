@@ -69,7 +69,7 @@ void ULuaState::OnProfile(lua_State* L, int gc)
 		FLuaProfiledStack ProfiledStack;
 #if LUAMACHINE_LUAU
 		lua_Debug LuaDebug;
-		if (gc)
+		if (gc > 0)
 		{
 			FLuaProfiledCall ProfiledCall;
 			ProfiledCall.Source = "GC";
