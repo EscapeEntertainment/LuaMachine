@@ -1193,13 +1193,15 @@ void ULuaState::Debug_SingleStep(lua_State* L, lua_Debug* ar)
 {
 #if LUAMACHINE_LUAU
 	ULuaState* LuaState = ULuaState::GetFromExtraSpace(L);
+    
 	FLuaDebug LuaDebug;
-	lua_getinfo(L, 0, "lSn", ar);
+	lua_getinfo(L, 0, "lsn", ar);
+    
 	LuaDebug.CurrentLine = ar->currentline;
 	LuaDebug.Source = ANSI_TO_TCHAR(ar->source);
 	LuaDebug.Name = ANSI_TO_TCHAR(ar->name);
-	LuaDebug.What = ANSI_TO_TCHAR(ar->what);
-
+    LuaDebug.What = ANSI_TO_TCHAR(ar->what);
+    
 	LuaState->ReceiveLuaSingleStepHook(LuaDebug);
 #endif
 }
@@ -3242,7 +3244,7 @@ TArray<FLuaValue> ULuaState::RunStringMulti(const FString & CodeString, FString 
 
 void ULuaState::Error(const FString & ErrorString)
 {
-	luaL_error(L, TCHAR_TO_UTF8(*ErrorString));
+	luaL_error(L, "%s", TCHAR_TO_UTF8(*ErrorString));
 }
 
 FLuaValue ULuaState::GetLuaValueFromGlobalName(const FString & GlobalName)
