@@ -132,6 +132,12 @@ public class LuaMachine : ModuleRules
                 PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "x64", "libLuau.Compiler_mac.a"));
                 PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "x64", "libLuau.VM_mac.a"));
             }
+            else if (Target.Platform == UnrealTargetPlatform.IOS)
+            {
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "ARM64", "libLuau.Ast_ios.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "ARM64", "libLuau.Compiler_ios.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "ARM64", "libLuau.VM_ios.a"));
+            }
         }
         else
         {
