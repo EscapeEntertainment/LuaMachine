@@ -1,4 +1,4 @@
-// Copyright 2018-2024 - Roberto De Ioris
+// Copyright 2018-2025 - Roberto De Ioris
 
 using UnrealBuildTool;
 
