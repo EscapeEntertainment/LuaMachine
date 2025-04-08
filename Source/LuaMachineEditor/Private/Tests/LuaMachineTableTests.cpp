@@ -43,4 +43,19 @@ bool FLuaMachineTableTest_SetField::RunTest(const FString& Parameters)
 	return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLuaMachineTableTest_Call, "LuaMachine.UnitTests.Table.Call", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FLuaMachineTableTest_Call::RunTest(const FString& Parameters)
+{
+	UWorld* TestWorld = UWorld::CreateWorld(EWorldType::Inactive, false);
+
+	ULuaUnitTestState* UnitTestState = ULuaState::CreateDynamicLuaState<ULuaUnitTestState>(TestWorld);
+
+	FLuaValue CallMe = UnitTestState->RunString("return {callme = function() return 17 end}", "");
+
+	TestTrue(TEXT("LuaValue == 17"), UnitTestState->LuaValueCall(CallMe.GetField("callme"), {}).ToInteger() == 17);
+	
+	return true;
+}
+
 #endif
