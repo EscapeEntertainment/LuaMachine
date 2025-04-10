@@ -54,7 +54,7 @@ bool FLuaMachineTableTest_Call::RunTest(const FString& Parameters)
 	FLuaValue CallMe = UnitTestState->RunString("return {callme = function() return 17 end}", "");
 
 	TestTrue(TEXT("LuaValue == 17"), UnitTestState->LuaValueCall(CallMe.GetField("callme"), {}).ToInteger() == 17);
-	
+
 	return true;
 }
 

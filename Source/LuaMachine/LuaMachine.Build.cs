@@ -21,17 +21,19 @@ public class LuaMachine : ModuleRules
         bUseUnity = false;
 
         PublicIncludePaths.AddRange(
-            new string[] {
+            new string[]
+            {
 				// ... add public include paths required here ...
 			}
-            );
+        );
 
 
         PrivateIncludePaths.AddRange(
-            new string[] {
+            new string[]
+            {
 				// ... add other private include paths required here ...
 			}
-            );
+        );
 
 
         PublicDependencyModuleNames.AddRange(
@@ -43,7 +45,7 @@ public class LuaMachine : ModuleRules
                 "PakFile"
 				// ... add other public dependencies that you statically link with here ...
 			}
-            );
+        );
 
 
         PrivateDependencyModuleNames.AddRange(
@@ -57,7 +59,7 @@ public class LuaMachine : ModuleRules
                 "InputCore",
 				// ... add private dependencies that you statically link with here ...	
 			}
-            );
+        );
 
 
         DynamicallyLoadedModuleNames.AddRange(
@@ -65,11 +67,12 @@ public class LuaMachine : ModuleRules
             {
 				// ... add any modules that your module loads dynamically here ...
 			}
-            );
+        );
 
         if (Target.bBuildEditor)
         {
-            PrivateDependencyModuleNames.AddRange(new string[]{
+            PrivateDependencyModuleNames.AddRange(new string[]
+            {
                 "UnrealEd",
                 "Projects"
             });
@@ -125,6 +128,9 @@ public class LuaMachine : ModuleRules
                 PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "x64", "Luau.Ast_win64.lib"));
                 PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "x64", "Luau.Compiler_win64.lib"));
                 PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "x64", "Luau.VM_win64.lib"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "x64", "Luau.Config_win64.lib"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "x64", "Luau.Analysis_win64.lib"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "x64", "Luau.EqSat_win64.lib"));
             }
             else if (Target.Platform == UnrealTargetPlatform.Mac)
             {
@@ -162,6 +168,5 @@ public class LuaMachine : ModuleRules
         {
             PublicDefinitions.Add("LUAMACHINE_LUAJIT=0");
         }
-
     }
 }
