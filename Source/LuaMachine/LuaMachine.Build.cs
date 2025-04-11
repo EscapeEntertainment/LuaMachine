@@ -123,6 +123,7 @@ public class LuaMachine : ModuleRules
         if (VMType == LuaVMType.Luau)
         {
             PublicDefinitions.Add("LUAMACHINE_LUAU=1");
+            PrivateIncludePaths.Add(System.IO.Path.Combine(ThirdPartyDirectory, "luau"));
             if (Target.Platform == UnrealTargetPlatform.Win64)
             {
                 PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "x64", "Luau.Ast_win64.lib"));
@@ -134,21 +135,37 @@ public class LuaMachine : ModuleRules
             }
             else if (Target.Platform == UnrealTargetPlatform.Mac)
             {
-                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "x64", "libLuau.Ast_mac.a"));
-                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "x64", "libLuau.Compiler_mac.a"));
-                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "x64", "libLuau.VM_mac.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Ast_mac.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Compiler_mac.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.VM_mac.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Config_mac.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Analysis_mac.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.EqSat_mac.a"));
             }
             else if (Target.Platform == UnrealTargetPlatform.IOS)
             {
-                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "ARM64", "libLuau.Ast_ios.a"));
-                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "ARM64", "libLuau.Compiler_ios.a"));
-                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "ARM64", "libLuau.VM_ios.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Ast_ios.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Compiler_ios.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.VM_ios.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Config_ios.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Analysis_ios.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.EqSat_ios.a"));
             }
             else if (Target.Platform == UnrealTargetPlatform.Android)
             {
-                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "ARM64", "libLuau.Ast_android_64.a"));
-                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "ARM64", "libLuau.Compiler_android_64.a"));
-                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "ARM64", "libLuau.VM_android_64.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Ast_android64.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Compiler_android64.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.VM_android64.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Config_android64.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Analysis_android64.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.EqSat_android64.a"));
+                
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Ast_android32.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Compiler_android32.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.VM_android32.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Config_android32.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Analysis_android32.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.EqSat_android32.a"));
             }
         }
         else

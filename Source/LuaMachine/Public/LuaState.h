@@ -643,9 +643,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Lua")
 	TMap<FLuaProfiledStack, FLuaProfiledData> StopProfiler();
 
-	UFUNCTION(Blueprintable, Category="Lua")
-	bool LuaCodeCheck(const FString& Code, const FString& Name, TArray<FString>& Errors);
-
 protected:
 	lua_State* L;
 	bool bDisabled;

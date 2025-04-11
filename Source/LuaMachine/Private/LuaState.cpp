@@ -3326,53 +3326,7 @@ TMap<FLuaProfiledStack, FLuaProfiledData> ULuaState::StopProfiler()
 
 	return ProfiledStacks;
 }
-
-bool ULuaState::LuaCodeCheck(const FString& Code, const FString& Name, TArray<FString>& Errors)
-{
-#if LUAMACHINE_LUAU
-	Luau::FrontendOptions FrontendOptions;
-	FrontendOptions.runLintChecks = true;
-
-	Luau::NullConfigResolver NullConfigResolver;
-
-	struct LuaMachineLuauFileResolver : Luau::FileResolver
-	{
-		LuaMachineLuauFileResolver(const FString& InCode) : Code(InCode)
-		{
-		}
-
-		std::optional<Luau::SourceCode> readSource(const Luau::ModuleName& Name) override
-		{
-			UE_LOG(LogTemp, Warning, TEXT("readSource %s"), UTF8_TO_TCHAR(Name.c_str()));
-			return Luau::SourceCode{TCHAR_TO_UTF8(*Code), Luau::SourceCode::Script};
-		}
-
-		const FString Code;
-	};
-
-	LuaMachineLuauFileResolver FileResolver(Code);
-
-	Luau::Frontend Frontend(&FileResolver, &NullConfigResolver, FrontendOptions);
-	Luau::registerBuiltinGlobals(Frontend, Frontend.globals);
-		Frontend.globals
-	Luau::freeze(Frontend.globals.globalTypes);
-
-	Frontend.parse(TCHAR_TO_UTF8(*Name));
-#undef check
-	Luau::CheckResult Result = Frontend.check(TCHAR_TO_UTF8(*Name));
-	for (const Luau::TypeError& LuaTypeError : Result.errors)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ULuaState::LuaCodeCheck %d %d %d %d [%s]"), LuaTypeError.location.begin.line, LuaTypeError.location.begin.column,
-		       LuaTypeError.location.end.line,
-		       LuaTypeError.location.end.column, UTF8_TO_TCHAR(Luau::toString(LuaTypeError, Luau::TypeErrorToStringOptions{Frontend.fileResolver}).c_str()));
-	}
-#define check(expr) UE_CHECK_IMPL(expr)
-	return true;
-#else
-	return true;
-#endif
-}
-
+			
 // from https://github.com/lunarmodules/lua-compat-5.3/blob/master/c-api/compat-5.3.c
 
 #if LUAMACHINE_LUAU
