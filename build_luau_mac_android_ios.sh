@@ -61,7 +61,7 @@ for TARGET in $TARGETS; do
 done
 
 cd ../build_android32
-/Applications/CMake.app/Contents/bin/cmake -DCMAKE_SYSTEM_NAME=Android -DCMAKE_ANDROID_NDK="/opt/homebrew/share/android-ndk" -DCMAKE_BUILD_TYPE=Release -DCMAKE_ANDROID_ARCH_ABI="armeabi-v7a" -DMAKE_ANDROID_API=21 ..
+/Applications/CMake.app/Contents/bin/cmake -DCMAKE_SYSTEM_NAME=Android -DCMAKE_ANDROID_NDK="/opt/homebrew/share/android-ndk" -DCMAKE_BUILD_TYPE=Release -DCMAKE_ANDROID_ARCH_ABI="armeabi-v7a" -DCMAKE_ANDROID_API=21 ..
 for TARGET in $TARGETS; do
   /Applications/CMake.app/Contents/bin/cmake --build . --target $TARGET --config Release -j$NCPU
 done
