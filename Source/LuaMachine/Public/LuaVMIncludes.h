@@ -7,8 +7,8 @@
 #define LUAMACHINE_RETURN_ERROR(L, Fmt, ...) return luaL_error(L, Fmt, ##__VA_ARGS__)
 #elif LUAMACHINE_LUAU
 #define TString luau_TString
-#include "ThirdParty/luau/luacode.h"
-#include "ThirdParty/luau/lualib.h"
+#include "ThirdParty/luau/include/luacode.h"
+#include "ThirdParty/luau/include/lualib.h"
 #undef TString
 
 #define lua_pushglobaltable(L) lua_pushvalue(L,LUA_GLOBALSINDEX)
