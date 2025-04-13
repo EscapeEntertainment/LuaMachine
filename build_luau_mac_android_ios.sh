@@ -30,6 +30,7 @@ fi
 NCPU=`sysctl -n hw.ncpu`
 TARGETS="Luau.Ast Luau.Compiler Luau.VM Luau.Config Luau.Analysis Luau.EqSat"
 PLATFORMS="mac ios android64 android32"
+ANDROID_NDK_PATH="$HOME/Library/Android/sdk/ndk/25.1.8937393"
 
 echo downloading from $URL
 curl -LO $URL
@@ -55,13 +56,13 @@ for TARGET in $TARGETS; do
 done
 
 cd ../build_android64
-/Applications/CMake.app/Contents/bin/cmake -DCMAKE_SYSTEM_NAME=Android -DCMAKE_ANDROID_NDK="/opt/homebrew/share/android-ndk" -DCMAKE_BUILD_TYPE=Release -DCMAKE_ANDROID_ARCH_ABI="arm64-v8a" -DCMAKE_ANDROID_API=21 ..
+/Applications/CMake.app/Contents/bin/cmake -DCMAKE_SYSTEM_NAME=Android -DCMAKE_ANDROID_NDK="${ANDROID_NDK_PATH}" -DCMAKE_BUILD_TYPE=Release -DCMAKE_ANDROID_ARCH_ABI="arm64-v8a" -DCMAKE_ANDROID_API=21 -DCMAKE_ANDROID_STL_TYPE="c++_static" ..
 for TARGET in $TARGETS; do
   /Applications/CMake.app/Contents/bin/cmake --build . --target $TARGET --config Release -j$NCPU
 done
 
 cd ../build_android32
-/Applications/CMake.app/Contents/bin/cmake -DCMAKE_SYSTEM_NAME=Android -DCMAKE_ANDROID_NDK="/opt/homebrew/share/android-ndk" -DCMAKE_BUILD_TYPE=Release -DCMAKE_ANDROID_ARCH_ABI="armeabi-v7a" -DMAKE_ANDROID_API=21 ..
+/Applications/CMake.app/Contents/bin/cmake -DCMAKE_SYSTEM_NAME=Android -DCMAKE_ANDROID_NDK="${ANDROID_NDK_PATH}" -DCMAKE_BUILD_TYPE=Release -DCMAKE_ANDROID_ARCH_ABI="armeabi-v7a" -DCMAKE_ANDROID_API=21 -DCMAKE_ANDROID_STL_TYPE="c++_static" ..
 for TARGET in $TARGETS; do
   /Applications/CMake.app/Contents/bin/cmake --build . --target $TARGET --config Release -j$NCPU
 done
