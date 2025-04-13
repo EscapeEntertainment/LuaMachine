@@ -169,6 +169,26 @@ public class LuaMachine : ModuleRules
                 PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Analysis_android32.a"));
                 PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.EqSat_android32.a"));
             }
+            else if (Target.Platform == UnrealTargetPlatform.Linux)
+            {
+                bEnableExceptions = true;
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Ast_linux_x64.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Compiler_linux_x64.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.VM_linux_x64.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Config_linux_x64.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Analysis_linux_x64.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.EqSat_linux_x64.a"));
+            }
+            else if (Target.Platform == UnrealTargetPlatform.LinuxArm64)
+            {
+                bEnableExceptions = true;
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Ast_linux_arm64.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Compiler_linux_arm64.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.VM_linux_arm64.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Config_linux_arm64.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Analysis_linux_arm64.a"));
+                PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.EqSat_linux_arm64.a"));
+            }
         }
         else
         {
