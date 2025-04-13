@@ -13,16 +13,25 @@ struct FLuauAnalysisResult
 	GENERATED_BODY()
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadonly, Category = "Luau")
-	int32 StartLine;
+	int32 StartLine = -1;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadonly, Category = "Luau")
-	int32 StartColumn;
+	int32 StartColumn = -1;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadonly, Category = "Luau")
-	int32 EndLine;
+	int32 EndLine = -1;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadonly, Category = "Luau")
-	int32 EndColumn;
+	int32 EndColumn = -1;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadonly, Category = "Luau")
+	bool bLint = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadonly, Category = "Luau")
+	bool bWarning = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadonly, Category = "Luau")
+	int32 LintCode = -1;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadonly, Category = "Luau")
 	FString Message;

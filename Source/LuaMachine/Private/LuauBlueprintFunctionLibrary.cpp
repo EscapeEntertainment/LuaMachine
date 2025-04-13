@@ -14,7 +14,7 @@ bool ULuauBlueprintFunctionLibrary::LuauAnalyze(const FString& Code, const FStri
 {
 #if LUAMACHINE_LUAU
 	Luau::FrontendOptions FrontendOptions;
-	FrontendOptions.runLintChecks = true;
+	FrontendOptions.runLintChecks = bLint;
 
 	Luau::NullConfigResolver NullConfigResolver;
 
@@ -50,8 +50,42 @@ bool ULuauBlueprintFunctionLibrary::LuauAnalyze(const FString& Code, const FStri
 		Result.StartColumn = LuaTypeError.location.begin.column;
 		Result.EndLine = LuaTypeError.location.end.line;
 		Result.EndColumn = LuaTypeError.location.end.column;
+		Result.bLint = false;
+		Result.bWarning = false;
+		Result.LintCode = -1;
 		Result.Message = UTF8_TO_TCHAR(Luau::toString(LuaTypeError, Luau::TypeErrorToStringOptions{ Frontend.fileResolver }).c_str());
 		Results.Add(MoveTemp(Result));
+	}
+	
+	if (bLint)
+	{
+		for (const Luau::LintWarning& LuaLintWarning : CheckResult.lintResult.errors)
+		{
+			FLuauAnalysisResult Result;
+			Result.StartLine = LuaLintWarning.location.begin.line;
+			Result.StartColumn = LuaLintWarning.location.begin.column;
+			Result.EndLine = LuaLintWarning.location.end.line;
+			Result.EndColumn = LuaLintWarning.location.end.column;
+			Result.bLint = true;
+			Result.bWarning = false;
+			Result.LintCode = LuaLintWarning.code;
+			Result.Message = UTF8_TO_TCHAR(LuaLintWarning.text.c_str());
+			Results.Add(MoveTemp(Result));
+		}
+	
+		for (const Luau::LintWarning& LuaLintWarning : CheckResult.lintResult.warnings)
+		{
+			FLuauAnalysisResult Result;
+			Result.StartLine = LuaLintWarning.location.begin.line;
+			Result.StartColumn = LuaLintWarning.location.begin.column;
+			Result.EndLine = LuaLintWarning.location.end.line;
+			Result.EndColumn = LuaLintWarning.location.end.column;
+			Result.bLint = true;
+			Result.bWarning = true;
+			Result.LintCode = LuaLintWarning.code;
+			Result.Message = UTF8_TO_TCHAR(LuaLintWarning.text.c_str());
+			Results.Add(MoveTemp(Result));
+		}
 	}
 
 	return Results.Num() == 0;
