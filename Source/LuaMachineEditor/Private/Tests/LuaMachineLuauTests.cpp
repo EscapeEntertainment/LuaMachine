@@ -11,8 +11,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLuaMachineLuauTest_AnalyzeSimple, "LuaMachine.
 
 bool FLuaMachineLuauTest_AnalyzeSimple::RunTest(const FString& Parameters)
 {
-	TArray<FString> Errors;
-	const bool bCodeCheck = ULuauBlueprintFunctionLibrary::LuauAnalyze("slocal actor = require(hey)", "HelloWorld", true, Errors);
+	TArray<FLuauAnalysisResult> Results;
+	const bool bCodeCheck = ULuauBlueprintFunctionLibrary::LuauAnalyze("slocal actor = require(hey)", "HelloWorld", true, Results);
 
 	TestTrue(TEXT("bCodeCheck == false"), !bCodeCheck);
 

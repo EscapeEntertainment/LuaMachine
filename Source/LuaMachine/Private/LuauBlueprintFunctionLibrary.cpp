@@ -10,7 +10,7 @@
 #include "ThirdParty/luau/Luau/BuiltinDefinitions.h"
 #endif
 
-bool ULuauBlueprintFunctionLibrary::LuauAnalyze(const FString& Code, const FString& ModuleName, const bool bLint, TArray<FString>& Messages)
+bool ULuauBlueprintFunctionLibrary::LuauAnalyze(const FString& Code, const FString& ModuleName, const bool bLint, TArray<FLuauAnalysisResult>& Results)
 {
 #if LUAMACHINE_LUAU
 	Luau::FrontendOptions FrontendOptions;
@@ -26,7 +26,7 @@ bool ULuauBlueprintFunctionLibrary::LuauAnalyze(const FString& Code, const FStri
 
 		std::optional<Luau::SourceCode> readSource(const Luau::ModuleName& Name) override
 		{
-			return Luau::SourceCode{TCHAR_TO_UTF8(*Code), Luau::SourceCode::Script};
+			return Luau::SourceCode{ TCHAR_TO_UTF8(*Code), Luau::SourceCode::Script };
 		}
 
 		const FString Code;
@@ -40,28 +40,33 @@ bool ULuauBlueprintFunctionLibrary::LuauAnalyze(const FString& Code, const FStri
 
 	Frontend.parse(TCHAR_TO_UTF8(*ModuleName));
 #undef check
-	Luau::CheckResult Result = Frontend.check(TCHAR_TO_UTF8(*ModuleName));
+	Luau::CheckResult CheckResult = Frontend.check(TCHAR_TO_UTF8(*ModuleName));
 #define check(expr) UE_CHECK_IMPL(expr)
 
-	for (const Luau::TypeError& LuaTypeError : Result.errors)
+	for (const Luau::TypeError& LuaTypeError : CheckResult.errors)
 	{
-		UE_LOG(LogTemp, Error, TEXT("ULuaState::LuaCodeCheck %d %d %d %d [%s]"), LuaTypeError.location.begin.line, LuaTypeError.location.begin.column,
-			   LuaTypeError.location.end.line,
-			   LuaTypeError.location.end.column, UTF8_TO_TCHAR(Luau::toString(LuaTypeError, Luau::TypeErrorToStringOptions{Frontend.fileResolver}).c_str()));
+		FLuauAnalysisResult Result;
+		Result.StartLine = LuaTypeError.location.begin.line;
+		Result.StartColumn = LuaTypeError.location.begin.column;
+		Result.EndLine = LuaTypeError.location.end.line;
+		Result.EndColumn = LuaTypeError.location.end.column;
+		Result.Message = UTF8_TO_TCHAR(Luau::toString(LuaTypeError, Luau::TypeErrorToStringOptions{ Frontend.fileResolver }).c_str());
+		Results.Add(MoveTemp(Result));
 	}
-	return Messages.Num() == 0;
+
+	return Results.Num() == 0;
 #else
 	UE_LOG(LogLuaMachine, Error, TEXT("The current Lua VM is not Luau, Analyzer cannot be used"));
 	return false;
 #endif
 }
 
-bool ULuauBlueprintFunctionLibrary::LuauAnalyzeLuaCode(ULuaCode* LuaCode, const FString& ModuleName, const bool bLint, TArray<FString>& Messages)
+bool ULuauBlueprintFunctionLibrary::LuauAnalyzeLuaCode(ULuaCode* LuaCode, const FString& ModuleName, const bool bLint, TArray<FLuauAnalysisResult>& Results)
 {
-#if LUAMACHINE_LUAU
-	return true;
-#else
-	UE_LOG(LogLuaMachine, Error, TEXT("The current Lua VM is not Luau, Analyzer cannot be used"));
-	return false;
-#endif
+	if (!LuaCode)
+	{
+		return false;
+	}
+
+	return LuauAnalyze(LuaCode->Code.ToString(), ModuleName, bLint, Results);
 }
