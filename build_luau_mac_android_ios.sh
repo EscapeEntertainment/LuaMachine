@@ -44,13 +44,13 @@ for PLATFORM in $PLATFORMS; do
 done
 
 cd build_mac
-CMAKE_OSX_ARCHITECTURES="arm64;x86_64" /Applications/CMake.app/Contents/bin/cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 ..
+CMAKE_OSX_ARCHITECTURES="arm64;x86_64" /Applications/CMake.app/Contents/bin/cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13 ..
 for TARGET in $TARGETS; do
   CMAKE_OSX_ARCHITECTURES="arm64;x86_64" /Applications/CMake.app/Contents/bin/cmake --build . --target $TARGET --config Release -j$NCPU
 done
 
 cd ../build_ios
-/Applications/CMake.app/Contents/bin/cmake -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 ..
+/Applications/CMake.app/Contents/bin/cmake -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13 ..
 for TARGET in $TARGETS; do
   /Applications/CMake.app/Contents/bin/cmake --build . --target $TARGET --config Release -j$NCPU
 done
