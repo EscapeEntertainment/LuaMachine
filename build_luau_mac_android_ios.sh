@@ -50,7 +50,7 @@ for TARGET in $TARGETS; do
 done
 
 cd ../build_ios
-/Applications/CMake.app/Contents/bin/cmake -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13 -DLUAU_EXTERN_C=ON ..
+/Applications/CMake.app/Contents/bin/cmake -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13 ..
 for TARGET in $TARGETS; do
   /Applications/CMake.app/Contents/bin/cmake --build . --target $TARGET --config Release -j$NCPU
 done
