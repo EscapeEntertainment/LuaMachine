@@ -44,7 +44,7 @@ for PLATFORM in $PLATFORMS; do
 done
 
 cd build_mac
-CMAKE_OSX_ARCHITECTURES="arm64;x86_64" /Applications/CMake.app/Contents/bin/cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13 ..
+CMAKE_OSX_ARCHITECTURES="arm64;x86_64" /Applications/CMake.app/Contents/bin/cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13 -DLUAU_EXTERN_C=ON ..
 for TARGET in $TARGETS; do
   CMAKE_OSX_ARCHITECTURES="arm64;x86_64" /Applications/CMake.app/Contents/bin/cmake --build . --target $TARGET --config Release -j$NCPU
 done
@@ -56,13 +56,13 @@ for TARGET in $TARGETS; do
 done
 
 cd ../build_android64
-/Applications/CMake.app/Contents/bin/cmake -DCMAKE_SYSTEM_NAME=Android -DCMAKE_ANDROID_NDK="${ANDROID_NDK_PATH}" -DCMAKE_BUILD_TYPE=Release -DCMAKE_ANDROID_ARCH_ABI="arm64-v8a" -DCMAKE_ANDROID_API=21 -DCMAKE_ANDROID_STL_TYPE="c++_static" ..
+/Applications/CMake.app/Contents/bin/cmake -DCMAKE_SYSTEM_NAME=Android -DCMAKE_ANDROID_NDK="${ANDROID_NDK_PATH}" -DCMAKE_BUILD_TYPE=Release -DLUAU_EXTERN_C=ON -DCMAKE_ANDROID_ARCH_ABI="arm64-v8a" -DCMAKE_ANDROID_API=21 -DCMAKE_ANDROID_STL_TYPE="c++_static" ..
 for TARGET in $TARGETS; do
   /Applications/CMake.app/Contents/bin/cmake --build . --target $TARGET --config Release -j$NCPU
 done
 
 cd ../build_android32
-/Applications/CMake.app/Contents/bin/cmake -DCMAKE_SYSTEM_NAME=Android -DCMAKE_ANDROID_NDK="${ANDROID_NDK_PATH}" -DCMAKE_BUILD_TYPE=Release -DCMAKE_ANDROID_ARCH_ABI="armeabi-v7a" -DCMAKE_ANDROID_API=21 -DCMAKE_ANDROID_STL_TYPE="c++_static" ..
+/Applications/CMake.app/Contents/bin/cmake -DCMAKE_SYSTEM_NAME=Android -DCMAKE_ANDROID_NDK="${ANDROID_NDK_PATH}" -DCMAKE_BUILD_TYPE=Release -DLUAU_EXTERN_C=ON -DCMAKE_ANDROID_ARCH_ABI="armeabi-v7a" -DCMAKE_ANDROID_API=21 -DCMAKE_ANDROID_STL_TYPE="c++_static" ..
 for TARGET in $TARGETS; do
   /Applications/CMake.app/Contents/bin/cmake --build . --target $TARGET --config Release -j$NCPU
 done
