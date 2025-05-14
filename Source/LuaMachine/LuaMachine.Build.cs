@@ -144,7 +144,6 @@ public class LuaMachine : ModuleRules
             }
             else if (Target.Platform == UnrealTargetPlatform.IOS)
             {
-                bEnableExceptions = true;
                 PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Ast_ios.a"));
                 PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Compiler_ios.a"));
                 PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.VM_ios.a"));
@@ -154,7 +153,6 @@ public class LuaMachine : ModuleRules
             }
             else if (Target.Platform == UnrealTargetPlatform.Android)
             {
-                bEnableExceptions = true;
                 PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Ast_android64.a"));
                 PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Compiler_android64.a"));
                 PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.VM_android64.a"));
@@ -171,7 +169,6 @@ public class LuaMachine : ModuleRules
             }
             else if (Target.Platform == UnrealTargetPlatform.Linux)
             {
-                bEnableExceptions = true;
                 PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Ast_linux_x64.a"));
                 PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Compiler_linux_x64.a"));
                 PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.VM_linux_x64.a"));
@@ -181,7 +178,6 @@ public class LuaMachine : ModuleRules
             }
             else if (Target.Platform == UnrealTargetPlatform.LinuxArm64)
             {
-                bEnableExceptions = true;
                 PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Ast_linux_arm64.a"));
                 PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.Compiler_linux_arm64.a"));
                 PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "libLuau.VM_linux_arm64.a"));
