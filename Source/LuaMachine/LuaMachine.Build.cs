@@ -124,6 +124,8 @@ public class LuaMachine : ModuleRules
         {
             PublicDefinitions.Add("LUAMACHINE_LUAU=1");
             PrivateIncludePaths.Add(System.IO.Path.Combine(ThirdPartyDirectory, "luau"));
+            bEnableExceptions = true;
+
             if (Target.Platform == UnrealTargetPlatform.Win64)
             {
                 PublicAdditionalLibraries.Add(System.IO.Path.Combine(ThirdPartyDirectory, "lib", "Luau.Ast_win64.lib"));
