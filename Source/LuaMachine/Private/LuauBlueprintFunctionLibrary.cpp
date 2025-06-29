@@ -2,6 +2,7 @@
 
 
 #include "LuauBlueprintFunctionLibrary.h"
+#include "LuaState.h"
 
 #if LUAMACHINE_LUAU
 #undef check

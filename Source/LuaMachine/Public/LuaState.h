@@ -32,11 +32,14 @@ struct FLuaUserData
 	// meaningful only for multicast delegates broadcasting
 	FMulticastScriptDelegate* MulticastScriptDelegate;
 
+	TSharedPtr<TFunction<FLuaValueOrError(TArray<FLuaValue>)>> Lambda;
+
 	FLuaUserData(UObject* InObject)
 	{
 		Type = ELuaValueType::UObject;
 		Context = InObject;
 		MulticastScriptDelegate = nullptr;
+		Lambda = nullptr;
 	}
 
 	FLuaUserData(UObject* InObject, UFunction* InFunction)
@@ -45,6 +48,15 @@ struct FLuaUserData
 		Context = InObject;
 		Function = InFunction;
 		MulticastScriptDelegate = nullptr;
+		Lambda = nullptr;
+	}
+
+	FLuaUserData(TSharedPtr<TFunction<FLuaValueOrError(TArray<FLuaValue>)>> InLambda)
+	{
+		Type = ELuaValueType::Lambda;
+		Context = nullptr;
+		MulticastScriptDelegate = nullptr;
+		Lambda = InLambda;
 	}
 };
 
