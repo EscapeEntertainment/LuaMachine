@@ -66,6 +66,69 @@ bool FLuaMachineStateTest_UObject::RunTest(const FString& Parameters)
 	return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLuaMachineStateTest_Lambda, "LuaMachine.UnitTests.State.Lambda", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FLuaMachineStateTest_Lambda::RunTest(const FString& Parameters)
+{
+	UWorld* TestWorld = UWorld::CreateWorld(EWorldType::Inactive, false);
+
+	ULuaUnitTestState* UnitTestState = ULuaState::CreateDynamicLuaState<ULuaUnitTestState>(TestWorld);
+
+	FLuaValue ReturnValue = UnitTestState->RunString("return lambda001()", "");
+
+	TestEqual(TEXT("LuaValue.String == \"Hello Test\""), ReturnValue.ToString(), "Hello Test");
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLuaMachineStateTest_LambdaReturningLambda, "LuaMachine.UnitTests.State.LambdaReturningLambda", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FLuaMachineStateTest_LambdaReturningLambda::RunTest(const FString& Parameters)
+{
+	UWorld* TestWorld = UWorld::CreateWorld(EWorldType::Inactive, false);
+
+	ULuaUnitTestState* UnitTestState = ULuaState::CreateDynamicLuaState<ULuaUnitTestState>(TestWorld);
+
+	FLuaValue ReturnValue = UnitTestState->RunString("return lambda002()()", "");
+
+	TestEqual(TEXT("LuaValue.String == \"Hello Test\""), ReturnValue.ToString(), "Hello Test");
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLuaMachineStateTest_UFunction, "LuaMachine.UnitTests.State.UFunction", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FLuaMachineStateTest_UFunction::RunTest(const FString& Parameters)
+{
+	UWorld* TestWorld = UWorld::CreateWorld(EWorldType::Inactive, false);
+
+	ULuaUnitTestState* UnitTestState = ULuaState::CreateDynamicLuaState<ULuaUnitTestState>(TestWorld);
+
+	FLuaValue ReturnValue = UnitTestState->RunString("return dummy()", "");
+
+	TestEqual(TEXT("LuaValue.String == \"Hello Test\""), ReturnValue.ToString(), "Hello Test");
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLuaMachineStateTest_LambdaError, "LuaMachine.UnitTests.State.LambdaError", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FLuaMachineStateTest_LambdaError::RunTest(const FString& Parameters)
+{
+	UWorld* TestWorld = UWorld::CreateWorld(EWorldType::Inactive, false);
+
+	ULuaUnitTestState* UnitTestState = ULuaState::CreateDynamicLuaState<ULuaUnitTestState>(TestWorld);
+
+	UnitTestState->bLogError = false;
+
+	FLuaValue ReturnValue = UnitTestState->RunString("return lambda003()", "");
+
+	TestTrue(TEXT("ReturnValue == nil"), ReturnValue.IsNil());
+	TestTrue(TEXT("LuaState Error"), UnitTestState->LastError.Contains("!!!ERROR!!!"));
+
+	return true;
+}
+
 #if LUAMACHINE_LUAU
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLuaMachineStateTest_CallTyped, "LuaMachine.UnitTests.State.CallTyped", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 

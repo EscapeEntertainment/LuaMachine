@@ -160,6 +160,11 @@ struct LUAMACHINE_API FLuaValue
 		return LuaValue;
 	}
 
+	static FLuaValue NewLambda(TFunction<FLuaValueOrError(TArray<FLuaValue>)> InLambda)
+	{
+		return FLuaValue(InLambda);
+	}
+
 	FString ToString() const;
 	FName ToName() const;
 	int64 ToInteger() const;
