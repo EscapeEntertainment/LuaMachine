@@ -146,8 +146,8 @@ bool FLuaMachineStateTest_FunctionsArrayCall::RunTest(const FString& Parameters)
 	)", "");
 
 	TestTrue(TEXT("LuaValue[1].String == \"lua\""), UnitTestState->LuaValueCall(LuaFunctionsArray.GetFieldByIndex(1), {}).String == "lua");
-	TestTrue(TEXT("LuaValue[1].String == \"lua\""), UnitTestState->LuaValueCall(LuaFunctionsArray.GetFieldByIndex(2), {}).Integer == 100);
-	TestTrue(TEXT("LuaValue[1].String == \"lua\""), UnitTestState->LuaValueCall(LuaFunctionsArray.GetFieldByIndex(3), {}).Bool == false);
+	TestTrue(TEXT("LuaValue[1].Integer == 100"), UnitTestState->LuaValueCall(LuaFunctionsArray.GetFieldByIndex(2), {}).Integer == 100);
+	TestTrue(TEXT("LuaValue[1].Bool == false"), UnitTestState->LuaValueCall(LuaFunctionsArray.GetFieldByIndex(3), {}).Bool == false);
 
 	return true;
 }
