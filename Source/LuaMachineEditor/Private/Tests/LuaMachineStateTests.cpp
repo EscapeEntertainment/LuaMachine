@@ -129,6 +129,29 @@ bool FLuaMachineStateTest_LambdaError::RunTest(const FString& Parameters)
 	return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLuaMachineStateTest_FunctionsArrayCall, "LuaMachine.UnitTests.State.FunctionsArrayCall", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FLuaMachineStateTest_FunctionsArrayCall::RunTest(const FString& Parameters)
+{
+	UWorld* TestWorld = UWorld::CreateWorld(EWorldType::Inactive, false);
+
+	ULuaUnitTestState* UnitTestState = ULuaState::CreateDynamicLuaState<ULuaUnitTestState>(TestWorld);
+
+	FLuaValue LuaFunctionsArray = UnitTestState->RunString(R"(
+		return {
+			function() return "lua" end,
+			function() return 100 end, 
+			function() return false end,
+		}
+	)", "");
+
+	TestTrue(TEXT("LuaValue[1].String == \"lua\""), UnitTestState->LuaValueCall(LuaFunctionsArray.GetFieldByIndex(1), {}).String == "lua");
+	TestTrue(TEXT("LuaValue[1].String == \"lua\""), UnitTestState->LuaValueCall(LuaFunctionsArray.GetFieldByIndex(2), {}).Integer == 100);
+	TestTrue(TEXT("LuaValue[1].String == \"lua\""), UnitTestState->LuaValueCall(LuaFunctionsArray.GetFieldByIndex(3), {}).Bool == false);
+
+	return true;
+}
+
 #if LUAMACHINE_LUAU
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLuaMachineStateTest_CallTyped, "LuaMachine.UnitTests.State.CallTyped", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
