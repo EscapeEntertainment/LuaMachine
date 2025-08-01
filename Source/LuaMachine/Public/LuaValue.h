@@ -134,7 +134,7 @@ struct LUAMACHINE_API FLuaValue
 
 	FLuaValue(TFunction<FLuaValueOrError(TArray<FLuaValue>)> InLambda) : FLuaValue()
 	{
-		if (InLambda.IsSet())
+		if (InLambda)
 		{
 			Type = ELuaValueType::Lambda;
 			Lambda = MakeShared<TFunction<FLuaValueOrError(TArray<FLuaValue>)>>(InLambda);
