@@ -418,6 +418,12 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Lua")
 	static FLuaValue LuaCreateUFunction(UObject* InObject, const FString& FunctionName);
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, meta = (WorldContext = "WorldContextObject"), Category = "Lua")
+	static FLuaValue LuaCreateVector(UObject* WorldContextObject, TSubclassOf<ULuaState> State, const FVector& Value);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, meta = (WorldContext = "WorldContextObject"), Category = "Lua")
+	static FLuaValue LuaCreateRotator(UObject* WorldContextObject, TSubclassOf<ULuaState> State, const FRotator& Value);
+
 	UFUNCTION(BlueprintCallable, meta = (ExpandEnumAsExecs = "LuaValueTypes"), Category = "Lua")
 	static void SwitchOnLuaValueType(const FLuaValue& LuaValue, ELuaValueType& LuaValueTypes);
 

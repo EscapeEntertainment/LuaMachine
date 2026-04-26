@@ -79,6 +79,28 @@ FLuaValue ULuaBlueprintFunctionLibrary::LuaCreateUFunction(UObject* InObject, co
 	return FLuaValue();
 }
 
+FLuaValue ULuaBlueprintFunctionLibrary::LuaCreateVector(UObject* WorldContextObject, TSubclassOf<ULuaState> State, const FVector& Value)
+{
+	FLuaValue VectorTable = LuaCreateTable(WorldContextObject, State);
+
+	VectorTable.SetField("x", Value.X);
+	VectorTable.SetField("y", Value.Y);
+	VectorTable.SetField("z", Value.Z);
+
+	return VectorTable;
+}
+
+FLuaValue ULuaBlueprintFunctionLibrary::LuaCreateRotator(UObject* WorldContextObject, TSubclassOf<ULuaState> State, const FRotator& Value)
+{
+	FLuaValue RotatorTable = LuaCreateTable(WorldContextObject, State);
+
+	RotatorTable.SetField("roll", Value.Roll);
+	RotatorTable.SetField("pitch", Value.Pitch);
+	RotatorTable.SetField("yaw", Value.Yaw);
+
+	return RotatorTable;
+}
+
 FLuaValue ULuaBlueprintFunctionLibrary::LuaCreateTable(UObject* WorldContextObject, TSubclassOf<ULuaState> State)
 {
 	FLuaValue LuaValue;
@@ -1495,6 +1517,7 @@ FRotator ULuaBlueprintFunctionLibrary::LuaTableToRotator(FLuaValue Value)
 
 	return FRotator(Pitch.ToFloat(), Yaw.ToFloat(), Roll.ToFloat());
 }
+
 
 FLuaValue ULuaBlueprintFunctionLibrary::LuaTableSetMetaTable(FLuaValue InTable, FLuaValue InMetaTable)
 {
